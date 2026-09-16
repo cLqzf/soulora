@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Soulora 是一款以倾听、许可式记忆与清晰边界为核心的 AI 虚拟伴侣产品概念。申请加入首批体验。" />
-    <meta name="theme-color" content="#05080b" />
+    <meta name="theme-color" content="#020203" />
     <meta name="color-scheme" content="dark" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="zh_CN" />
@@ -12,7 +12,7 @@
     <meta property="og:description" content="记得你允许它记住的，也尊重你想独处的时刻。探索 Soulora 产品概念。" />
     <title>Soulora｜一个真正懂得倾听的 AI 伴侣</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260916-cinematic-atmosphere-v4" />
     <script>document.documentElement.classList.remove("no-js");</script>
   </head>
   <body>
@@ -39,7 +39,7 @@
           <span class="brand-status">CONCEPT</span>
         </a>
         <nav class="desktop-nav" aria-label="主导航">
-          <a href="#experience">产品体验</a><a href="#system">陪伴系统</a><a href="#moments">陪伴时刻</a><a href="#safety">隐私边界</a>
+          <a href="#avatars">实时形象</a><a href="#experience">产品体验</a><a href="#system">陪伴系统</a><a href="#safety">隐私边界</a>
         </nav>
         <a class="nav-cta" href="#early-access"><span>申请体验</span><svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="打开导航菜单" data-menu-toggle>
@@ -47,7 +47,7 @@
         </button>
       </div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="移动端导航" hidden data-mobile-menu>
-        <a href="#experience"><span>01</span> 产品体验</a><a href="#system"><span>02</span> 陪伴系统</a><a href="#moments"><span>03</span> 陪伴时刻</a><a href="#safety"><span>04</span> 隐私边界</a>
+        <a href="#avatars"><span>01</span> 实时形象</a><a href="#experience"><span>02</span> 产品体验</a><a href="#system"><span>03</span> 陪伴系统</a><a href="#safety"><span>04</span> 隐私边界</a>
         <a class="mobile-menu-cta" href="#early-access">申请首批体验 <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
       </nav>
     </header>
@@ -55,11 +55,22 @@
     <main id="main-content">
       <section class="hero" id="top" aria-labelledby="hero-title">
         <div class="hero-light hero-light-a" aria-hidden="true"></div><div class="hero-light hero-light-b" aria-hidden="true"></div><div class="hero-grid" aria-hidden="true"></div>
+        <div class="hero-portrait" aria-hidden="true">
+          <div class="hero-media">
+            <img class="hero-media-frame" src="assets/vidu/aurelia.webp" alt="" width="1080" height="608" fetchpriority="high" />
+            <img class="hero-media-frame" src="assets/vidu/soyo.webp" alt="" width="1080" height="608" />
+            <img class="hero-media-frame" src="assets/vidu/mia.webp" alt="" width="896" height="1200" />
+          </div>
+          <span class="hero-backlight"></span><span class="hero-rim-pulse"></span><span class="hero-ground-glow"></span>
+          <div class="hero-fog"><i class="fog-bank fog-bank-a"></i><i class="fog-bank fog-bank-b"></i><i class="fog-bank fog-bank-c"></i><i class="fog-bank fog-bank-d"></i></div>
+          <canvas class="hero-particle-canvas" data-hero-atmosphere></canvas>
+          <i class="portrait-spark spark-a"></i><i class="portrait-spark spark-b"></i><i class="portrait-spark spark-c"></i>
+        </div>
         <div class="hero-inner page-container">
           <div class="hero-copy reveal">
-            <div class="product-kicker"><span class="live-dot"></span><span>AI COMPANION · CONCEPT PREVIEW</span></div>
-            <h1 id="hero-title">不是更会说话的 AI。<span>是更懂何时倾听的陪伴。</span></h1>
-            <p class="hero-lead">Soulora 记得你允许它记住的，理解你没有说完的，也尊重你想独处的时刻。</p>
+            <div class="product-kicker"><span class="live-dot"></span><span>SOULORA · VIDU STREAM VISUAL</span></div>
+            <h1 id="hero-title">陪你生活的<span>AI 伙伴。</span></h1>
+            <p class="hero-lead">记得你允许它记住的，理解你没有说完的，也尊重你想独处的每一个时刻。</p>
             <div class="hero-actions">
               <a class="button button-primary" href="#early-access">申请首批体验 <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
               <a class="button button-ghost" href="#experience"><span class="button-icon"><svg aria-hidden="true"><use href="#icon-play"></use></svg></span>体验产品概念</a>
@@ -86,6 +97,34 @@
       </section>
 
       <section class="principle-rail" aria-label="Soulora 核心能力"><div class="rail-track"><span>CONTEXT AWARE</span><i></i><span>MEMORY WITH CONSENT</span><i></i><span>VOICE PRESENCE</span><i></i><span>EMOTIONAL RHYTHM</span><i></i><span>BOUNDARIES BY DESIGN</span><i></i><span aria-hidden="true">CONTEXT AWARE</span><i aria-hidden="true"></i><span aria-hidden="true">MEMORY WITH CONSENT</span><i aria-hidden="true"></i><span aria-hidden="true">VOICE PRESENCE</span><i aria-hidden="true"></i><span aria-hidden="true">EMOTIONAL RHYTHM</span><i aria-hidden="true"></i><span aria-hidden="true">BOUNDARIES BY DESIGN</span><i aria-hidden="true"></i></div></section>
+
+      <section class="avatar-lab section" id="avatars" aria-labelledby="avatar-title">
+        <div class="page-container">
+          <header class="section-header reveal"><div><p class="section-label"><span>00</span> REALTIME AVATAR LAB</p><h2 id="avatar-title">让陪伴从文字里，<br />真正来到你面前。</h2></div><p>基于实时数字人技术的产品方向：选择一种陪伴气质，让声音、表情与回应节奏共同构成更具存在感的交流。</p></header>
+          <figure class="avatar-material-banner reveal">
+            <img src="assets/vidu/stream-characters.webp" alt="Vidu Stream 展示的真人、萌宠与动漫形象" width="728" height="480" loading="lazy" />
+            <figcaption><small>ONE ENGINE · MANY FORMS</small><strong>真人、动漫、萌宠，都可以成为有回应的数字生命。</strong><span>视觉素材经授权取自 Vidu Stream Avatar</span></figcaption>
+          </figure>
+          <div class="avatar-lab-shell reveal">
+            <div class="avatar-preview" data-avatar-stage data-avatar="lumen">
+              <div class="avatar-preview-top"><span class="avatar-live"><i></i> LIVE CONCEPT</span><span>VIDU STREAM · PLANNED</span></div>
+              <img class="avatar-stage-media" data-avatar-image src="assets/vidu/aurelia.webp" alt="Soulora 陪伴形象：澄" width="1080" height="608" loading="lazy" />
+              <i class="avatar-light light-one" aria-hidden="true"></i><i class="avatar-light light-two" aria-hidden="true"></i>
+              <div class="avatar-dialogue"><p><span data-avatar-name>澄</span><small data-avatar-tone>安静 · 克制 · 温暖</small></p><blockquote data-avatar-line>“我在。你可以慢一点说，不需要先把情绪整理好。”</blockquote><div class="avatar-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+            </div>
+            <aside class="avatar-controls" aria-label="实时形象选择器">
+              <div class="avatar-control-heading"><p><small>CHOOSE A PRESENCE</small><strong>选择陪伴气质</strong></p><span data-avatar-index>01 / 04</span></div>
+              <div class="avatar-picker">
+                <button type="button" aria-pressed="true" data-avatar-option="lumen" data-avatar-image="assets/vidu/aurelia.webp" data-avatar-name="澄" data-avatar-tone="安静 · 克制 · 温暖" data-avatar-line="“我在。你可以慢一点说，不需要先把情绪整理好。”"><span class="avatar-thumb" aria-hidden="true"><img src="assets/vidu/aurelia.webp" alt="" width="1080" height="608" loading="lazy" /></span><span><strong>澄</strong><small>适合安静倾听与夜间陪伴</small></span><em>01</em></button>
+                <button type="button" aria-pressed="false" data-avatar-option="mira" data-avatar-image="assets/vidu/soyo.webp" data-avatar-name="弥拉" data-avatar-tone="明亮 · 好奇 · 松弛" data-avatar-line="“我们可以换个角度看它。也许答案没有你想象得那么远。”"><span class="avatar-thumb" aria-hidden="true"><img src="assets/vidu/soyo.webp" alt="" width="1080" height="608" loading="lazy" /></span><span><strong>弥拉</strong><small>适合灵感对话与日常探索</small></span><em>02</em></button>
+                <button type="button" aria-pressed="false" data-avatar-option="noa" data-avatar-image="assets/vidu/mia.webp" data-avatar-name="诺亚" data-avatar-tone="清晰 · 稳定 · 直接" data-avatar-line="“先处理最重要的一步。其他问题，我们可以稍后再一起拆开。”"><span class="avatar-thumb" aria-hidden="true"><img src="assets/vidu/mia.webp" alt="" width="896" height="1200" loading="lazy" /></span><span><strong>诺亚</strong><small>适合梳理思路与行动陪伴</small></span><em>03</em></button>
+                <button type="button" aria-pressed="false" data-avatar-option="eden" data-avatar-image="assets/vidu/himari.webp" data-avatar-name="伊登" data-avatar-tone="柔和 · 感性 · 富有想象" data-avatar-line="“今天不用急着变得更好。先留住那个让你微微心动的片刻。”"><span class="avatar-thumb" aria-hidden="true"><img src="assets/vidu/himari.webp" alt="" width="1080" height="1920" loading="lazy" /></span><span><strong>伊登</strong><small>适合情绪表达与创意陪伴</small></span><em>04</em></button>
+              </div>
+              <div class="avatar-tech"><p><span>技术接入目标</span><a href="https://www.vidu.com/zh/vidu-stream/avatar" target="_blank" rel="noreferrer">查看技术来源 ↗</a></p><div><span><strong>540P</strong><small>实时画面</small></span><span><strong>25 FPS</strong><small>流畅交互</small></span><span><strong>LONG</strong><small>长时生成</small></span><span><strong>VOICE</strong><small>音色定制</small></span></div><small>以上为基于供应商公开能力的集成目标，当前页面仅为产品概念，不代表已经完成生产接入。</small></div>
+            </aside>
+          </div>
+        </div>
+      </section>
 
       <section class="experience section" id="experience" aria-labelledby="experience-title">
         <div class="page-container">
@@ -158,6 +197,6 @@
     </main>
 
     <footer class="site-footer"><div class="page-container footer-grid"><div><a class="brand footer-brand" href="#top" aria-label="Soulora 首页"><span class="brand-orb" aria-hidden="true"><i></i></span><span class="brand-name">Soulora</span></a><p>Technology with presence.<br />Companionship with boundaries.</p></div><div class="footer-links"><div><strong>探索</strong><a href="#experience">产品体验</a><a href="#system">陪伴系统</a><a href="#moments">陪伴时刻</a></div><div><strong>信任</strong><a href="#safety">隐私边界</a><a href="#faq">常见问题</a><a href="#early-access">申请体验</a></div></div><div class="footer-state"><span class="live-dot"></span><p><strong>Concept preview</strong><small>尚未开放真实产品服务</small></p></div></div><div class="page-container footer-bottom"><span>© 2026 Soulora</span><span>AI companion concept · Shanghai</span><a href="#top">返回顶部 ↑</a></div></footer>
-    <script src="script.js"></script>
+    <script src="script.js?v=20260916-cinematic-atmosphere-v3"></script>
   </body>
 </html>

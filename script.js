@@ -1,5 +1,127 @@
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+function setupHeroAtmosphere() {
+  const canvas = document.querySelector("[data-hero-atmosphere]");
+  const hero = canvas?.closest(".hero");
+  const context = canvas?.getContext("2d");
+  if (!canvas || !hero || !context) return;
+
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let frame = 0;
+  let lastTime = 0;
+  let isVisible = true;
+  let particles = [];
+
+  const resetParticle = (particle, initial = false) => {
+    const warm = Math.random() > 0.25;
+    const rightBiased = warm && Math.random() > 0.24;
+    particle.x = rightBiased ? width * (0.57 + Math.random() * 0.41) : Math.random() * width;
+    particle.y = initial ? Math.random() * height : height + 10 + Math.random() * 90;
+    particle.size = warm ? 0.65 + Math.random() * 1.55 : 0.8 + Math.random() * 1.8;
+    particle.speed = warm ? 0.02 + Math.random() * 0.048 : 0.008 + Math.random() * 0.018;
+    particle.drift = (Math.random() - 0.5) * 0.018;
+    particle.alpha = warm ? 0.24 + Math.random() * 0.62 : 0.08 + Math.random() * 0.2;
+    particle.phase = Math.random() * Math.PI * 2;
+    particle.warm = warm;
+  };
+
+  const draw = (time = 0, advance = true) => {
+    const delta = lastTime ? Math.min(32, time - lastTime) : 16;
+    lastTime = time;
+    context.clearRect(0, 0, width, height);
+    context.globalCompositeOperation = "lighter";
+
+    particles.forEach((particle) => {
+      if (advance) {
+        particle.y -= particle.speed * delta;
+        particle.x += particle.drift * delta + Math.sin(time * 0.00035 + particle.phase) * 0.035;
+        if (particle.y < -24 || particle.x < -30 || particle.x > width + 30) resetParticle(particle);
+      }
+
+      const shimmer = 0.68 + Math.sin(time * 0.0014 + particle.phase) * 0.32;
+      const alpha = particle.alpha * shimmer;
+      context.beginPath();
+      context.fillStyle = particle.warm ? `rgba(234, 145, 101, ${alpha})` : `rgba(112, 157, 226, ${alpha})`;
+      context.shadowColor = particle.warm ? "rgba(220, 102, 67, .72)" : "rgba(91, 139, 216, .58)";
+      context.shadowBlur = particle.size * (particle.warm ? 7 : 11);
+      context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      context.fill();
+    });
+
+    context.globalCompositeOperation = "source-over";
+    context.shadowBlur = 0;
+  };
+
+  const resize = () => {
+    const rect = hero.getBoundingClientRect();
+    width = Math.max(1, rect.width);
+    height = Math.max(1, rect.height);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const count = prefersReducedMotion.matches ? 18 : width < 720 ? 32 : width < 1100 ? 52 : 78;
+    particles = Array.from({ length: count }, () => {
+      const particle = {};
+      resetParticle(particle, true);
+      return particle;
+    });
+    draw(performance.now(), false);
+  };
+
+  const render = (time) => {
+    frame = 0;
+    if (!isVisible || document.hidden || prefersReducedMotion.matches) return;
+    draw(time, true);
+    frame = window.requestAnimationFrame(render);
+  };
+
+  const start = () => {
+    if (!frame && isVisible && !document.hidden && !prefersReducedMotion.matches) {
+      lastTime = 0;
+      frame = window.requestAnimationFrame(render);
+    }
+  };
+
+  const stop = () => {
+    if (frame) window.cancelAnimationFrame(frame);
+    frame = 0;
+  };
+
+  const observer = new IntersectionObserver(([entry]) => {
+    isVisible = entry.isIntersecting;
+    if (isVisible) start();
+    else stop();
+  }, { threshold: 0.02 });
+
+  observer.observe(hero);
+  if ("ResizeObserver" in window) new ResizeObserver(resize).observe(hero);
+  else window.addEventListener("resize", resize, { passive: true });
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+  if (finePointer.matches && !prefersReducedMotion.matches) {
+    hero.addEventListener("pointermove", (event) => {
+      const rect = hero.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width - 0.5) * 12;
+      const y = ((event.clientY - rect.top) / rect.height - 0.5) * 8;
+      hero.style.setProperty("--hero-parallax-x", `${x.toFixed(2)}px`);
+      hero.style.setProperty("--hero-parallax-y", `${y.toFixed(2)}px`);
+    }, { passive: true });
+    hero.addEventListener("pointerleave", () => {
+      hero.style.setProperty("--hero-parallax-x", "0px");
+      hero.style.setProperty("--hero-parallax-y", "0px");
+    });
+  }
+
+  resize();
+  start();
+}
+
 function setupReveal() {
   const elements = document.querySelectorAll(".reveal");
   if (prefersReducedMotion.matches || !("IntersectionObserver" in window)) {
@@ -302,6 +424,53 @@ function setupVoiceDemo() {
   toggle.addEventListener("click", () => (timer ? pause() : play()));
 }
 
+function setupAvatarLab() {
+  const stage = document.querySelector("[data-avatar-stage]");
+  const buttons = [...document.querySelectorAll("[data-avatar-option]")];
+  const indexLabel = document.querySelector("[data-avatar-index]");
+  if (!stage || !buttons.length) return;
+
+  const name = stage.querySelector("[data-avatar-name]");
+  const tone = stage.querySelector("[data-avatar-tone]");
+  const line = stage.querySelector("[data-avatar-line]");
+  const image = stage.querySelector("[data-avatar-image]");
+
+  buttons.forEach((button) => {
+    if (!button.dataset.avatarImage) return;
+    const preload = new Image();
+    preload.src = button.dataset.avatarImage;
+  });
+
+  const activate = (button, focus = false) => {
+    const index = buttons.indexOf(button);
+    buttons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+    stage.dataset.avatar = button.dataset.avatarOption || "lumen";
+    if (name) name.textContent = button.dataset.avatarName || "";
+    if (tone) tone.textContent = button.dataset.avatarTone || "";
+    if (line) line.textContent = button.dataset.avatarLine || "";
+    if (image && button.dataset.avatarImage) {
+      image.src = button.dataset.avatarImage;
+      image.alt = `Soulora 陪伴形象：${button.dataset.avatarName || "未命名"}`;
+    }
+    if (indexLabel) indexLabel.textContent = `${String(index + 1).padStart(2, "0")} / ${String(buttons.length).padStart(2, "0")}`;
+    stage.classList.remove("is-switching");
+    window.requestAnimationFrame(() => stage.classList.add("is-switching"));
+    if (focus) button.focus();
+  };
+
+  buttons.forEach((button, index) => {
+    button.addEventListener("click", () => activate(button));
+    button.addEventListener("keydown", (event) => {
+      let nextIndex = null;
+      if (["ArrowRight", "ArrowDown"].includes(event.key)) nextIndex = (index + 1) % buttons.length;
+      if (["ArrowLeft", "ArrowUp"].includes(event.key)) nextIndex = (index - 1 + buttons.length) % buttons.length;
+      if (nextIndex === null) return;
+      event.preventDefault();
+      activate(buttons[nextIndex], true);
+    });
+  });
+}
+
 function setupSettings() {
   const feedback = document.querySelector("[data-setting-feedback]");
   document.querySelectorAll("[data-setting-toggle]").forEach((button) => {
@@ -411,6 +580,7 @@ function setupAccessForm() {
   });
 }
 
+setupHeroAtmosphere();
 setupReveal();
 setupHeader();
 setupPointerLight();
@@ -419,6 +589,7 @@ setupConversationDemo();
 setupMemoryDemo();
 setupBreathingDemo();
 setupVoiceDemo();
+setupAvatarLab();
 setupSettings();
 setupTimeline();
 setupFaq();
