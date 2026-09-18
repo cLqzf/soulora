@@ -1,10 +1,42 @@
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+function setupHeroVideo() {
+  const video = document.querySelector("[data-hero-video]");
+  if (!video) return;
+
+  let isVisible = true;
+  video.muted = true;
+  video.defaultMuted = true;
+
+  const syncPlayback = () => {
+    if (prefersReducedMotion.matches || document.hidden || !isVisible) {
+      video.pause();
+      if (prefersReducedMotion.matches && video.readyState >= 1) video.currentTime = 0;
+      return;
+    }
+
+    const playback = video.play();
+    if (playback) playback.catch(() => {});
+  };
+
+  const observer = new IntersectionObserver(([entry]) => {
+    isVisible = entry.isIntersecting;
+    syncPlayback();
+  }, { threshold: 0.02 });
+
+  observer.observe(video.closest(".hero") || video);
+  video.addEventListener("loadedmetadata", syncPlayback, { once: true });
+  document.addEventListener("visibilitychange", syncPlayback);
+  if (prefersReducedMotion.addEventListener) prefersReducedMotion.addEventListener("change", syncPlayback);
+  else prefersReducedMotion.addListener(syncPlayback);
+  syncPlayback();
+}
+
 function setupHeroAtmosphere() {
   const canvas = document.querySelector("[data-hero-atmosphere]");
   const hero = canvas?.closest(".hero");
   const context = canvas?.getContext("2d");
-  if (!canvas || !hero || !context) return;
+  if (!canvas || !hero || !context || hero.classList.contains("hero-video-background")) return;
 
   let width = 0;
   let height = 0;
@@ -153,7 +185,7 @@ function setupHeader() {
   const updateHeader = () => header.classList.toggle("is-scrolled", window.scrollY > 20);
   const setMenu = (open, restoreFocus = false) => {
     toggle.setAttribute("aria-expanded", String(open));
-    toggle.setAttribute("aria-label", open ? "关闭导航菜单" : "打开导航菜单");
+    toggle.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
     menu.hidden = !open;
     header.classList.toggle("is-open", open);
     document.body.classList.toggle("menu-open", open);
@@ -267,16 +299,16 @@ function setupConversationDemo() {
     orb.append(document.createElement("i"));
     const typing = document.createElement("div");
     typing.className = "message message-soul typing-message";
-    typing.setAttribute("aria-label", "Soulora 正在理解");
+    typing.setAttribute("aria-label", "Soulora is listening");
     typing.innerHTML = "<i></i><i></i><i></i>";
     row.append(orb, typing);
     thread.append(row);
     thread.scrollTop = thread.scrollHeight;
 
     window.setTimeout(() => {
-      const calmReply = value.includes("陪")
-        ? "好。我先陪你待在这里，不需要马上做什么。等你想说时，我再听。"
-        : "我们可以只理最小的一步。此刻最占据你注意力的，是内容本身，还是站在大家面前的感觉？";
+      const calmReply = value.toLowerCase().includes("stay")
+        ? "Of course. I'll stay right here. You don't need to do anything yet—when you're ready to speak, I'll listen."
+        : "We can focus on the smallest next step. Right now, is it the content itself—or the feeling of standing in front of everyone—that has your attention?";
       typing.classList.remove("typing-message");
       typing.removeAttribute("aria-label");
       typing.textContent = calmReply;
@@ -315,12 +347,12 @@ function setupMemoryDemo() {
     if (action === "save") {
       edit.hidden = true;
       actions.hidden = false;
-      result.textContent = "修改已保留在本次页面演示中，未上传或长期保存。";
+      result.textContent = "Your edit is kept only in this page demo. It has not been uploaded or saved long term.";
       return;
     }
     result.textContent = action === "keep"
-      ? "已在本次演示中允许这条记忆；刷新页面后会恢复。"
-      : "已拒绝保存，这条内容不会离开当前页面。";
+      ? "This memory is allowed for the current demo. Refresh the page to reset it."
+      : "Memory declined. This content will not leave the current page.";
     card.dataset.state = action;
   });
 }
@@ -339,10 +371,10 @@ function setupBreathingDemo() {
 
   const render = () => {
     time.textContent = `00:${String(remaining).padStart(2, "0")}`;
-    if (remaining === 0) instruction.textContent = "很好。此刻不需要再做更多。";
+    if (remaining === 0) instruction.textContent = "That's enough. You don't need to do anything more right now.";
     else {
       const phase = (30 - remaining) % 8;
-      instruction.textContent = phase < 4 ? "慢慢吸气…" : "轻轻呼气…";
+      instruction.textContent = phase < 4 ? "Breathe in slowly…" : "Breathe out gently…";
     }
   };
   const stop = (completed = false) => {
@@ -350,14 +382,14 @@ function setupBreathingDemo() {
     timer = null;
     demo.classList.remove("is-running", "is-paused");
     icon.setAttribute("href", "#icon-play");
-    label.textContent = completed ? "再来一次" : "继续";
+    label.textContent = completed ? "Again" : "Continue";
   };
   const start = () => {
     if (remaining === 0) remaining = 30;
     demo.classList.add("is-running");
     demo.classList.remove("is-paused");
     icon.setAttribute("href", "#icon-pause");
-    label.textContent = "暂停";
+    label.textContent = "Pause";
     render();
     timer = window.setInterval(() => {
       remaining -= 1;
@@ -372,8 +404,8 @@ function setupBreathingDemo() {
       timer = null;
       demo.classList.add("is-paused");
       icon.setAttribute("href", "#icon-play");
-      label.textContent = "继续";
-      instruction.textContent = "已暂停。按照你的节奏来。";
+      label.textContent = "Continue";
+      instruction.textContent = "Paused. Take it at your own pace.";
     } else start();
   });
   reset.addEventListener("click", () => {
@@ -382,8 +414,8 @@ function setupBreathingDemo() {
     remaining = 30;
     demo.classList.remove("is-running", "is-paused");
     icon.setAttribute("href", "#icon-play");
-    label.textContent = "开始";
-    instruction.textContent = "准备好时，我们慢慢开始。";
+    label.textContent = "Start";
+    instruction.textContent = "When you're ready, we'll begin slowly.";
     render();
   });
 }
@@ -408,13 +440,13 @@ function setupVoiceDemo() {
     timer = null;
     demo.classList.remove("is-playing");
     icon.setAttribute("href", "#icon-play");
-    toggle.setAttribute("aria-label", "播放声音陪伴概念");
+    toggle.setAttribute("aria-label", "Play voice companion concept");
   };
   const play = () => {
     if (current >= duration) current = 0;
     demo.classList.add("is-playing");
     icon.setAttribute("href", "#icon-pause");
-    toggle.setAttribute("aria-label", "暂停声音陪伴概念");
+    toggle.setAttribute("aria-label", "Pause voice companion concept");
     timer = window.setInterval(() => {
       current += 1;
       render();
@@ -450,7 +482,7 @@ function setupAvatarLab() {
     if (line) line.textContent = button.dataset.avatarLine || "";
     if (image && button.dataset.avatarImage) {
       image.src = button.dataset.avatarImage;
-      image.alt = `Soulora 陪伴形象：${button.dataset.avatarName || "未命名"}`;
+      image.alt = `Soulora companion avatar: ${button.dataset.avatarName || "Unnamed"}`;
     }
     if (indexLabel) indexLabel.textContent = `${String(index + 1).padStart(2, "0")} / ${String(buttons.length).padStart(2, "0")}`;
     stage.classList.remove("is-switching");
@@ -477,8 +509,8 @@ function setupSettings() {
     button.addEventListener("click", () => {
       const next = button.getAttribute("aria-checked") !== "true";
       button.setAttribute("aria-checked", String(next));
-      const name = button.querySelector("strong")?.textContent || "此设置";
-      if (feedback) feedback.textContent = `${name}已${next ? "开启" : "关闭"}。这是本次页面演示状态，不会保存。`;
+      const name = button.querySelector("strong")?.textContent || "This setting";
+      if (feedback) feedback.textContent = `${name} is now ${next ? "on" : "off"}. This demo state is not saved.`;
     });
   });
 }
@@ -526,8 +558,8 @@ function setupAccessForm() {
   const validate = () => {
     const value = input.value.trim();
     let message = "";
-    if (!value) message = "请输入邮箱地址。";
-    else if (!input.validity.valid) message = "请输入有效的邮箱格式。";
+    if (!value) message = "Enter your email address.";
+    else if (!input.validity.valid) message = "Enter a valid email address.";
     input.setAttribute("aria-invalid", String(Boolean(message)));
     field.classList.toggle("is-valid", Boolean(value) && !message);
     error.textContent = message;
@@ -551,13 +583,13 @@ function setupAccessForm() {
     const label = submit.querySelector("span");
     submit.classList.add("is-loading");
     submit.disabled = true;
-    label.textContent = "正在检查";
+    label.textContent = "Checking…";
     result.textContent = "";
 
     try {
       if (!endpoint) {
         await new Promise((resolve) => window.setTimeout(resolve, prefersReducedMotion.matches ? 50 : 650));
-        result.textContent = "预览完成：邮箱格式有效，但尚未配置申请接口，因此没有上传或保存。";
+        result.textContent = "Preview complete: your email format is valid, but no application endpoint is configured, so nothing was uploaded or saved.";
         return;
       }
 
@@ -567,19 +599,20 @@ function setupAccessForm() {
         body: JSON.stringify({ email: input.value.trim() })
       });
       if (!response.ok) throw new Error("Request failed");
-      result.textContent = "申请已提交。开放首批体验时，我们会通过邮箱联系你。";
+      result.textContent = "Application submitted. We'll contact you by email when early access opens.";
       form.reset();
       field.classList.remove("is-valid");
     } catch {
-      result.textContent = "暂时无法提交，请稍后重试。你的输入已保留。";
+      result.textContent = "We couldn't submit your application. Try again later—your input has been kept.";
     } finally {
       submit.classList.remove("is-loading");
       submit.disabled = false;
-      label.textContent = "申请首批体验";
+      label.textContent = "Apply for early access";
     }
   });
 }
 
+setupHeroVideo();
 setupHeroAtmosphere();
 setupReveal();
 setupHeader();

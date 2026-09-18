@@ -66,7 +66,7 @@ Soulora uses a near-black cinematic canvas with warm-white rim light, restrained
 - Standard transition: 320–480ms.
 - Section reveal: 700–900ms.
 - Ambient motion: 8–24s and low amplitude.
-- Hero atmosphere: three authorized Vidu portraits crossfade across an 18s cycle with subtle camera breathing, while 11–18s luminous-blue ground fog, boundary-free 6–9s rim-light pulses, and right-biased warm canvas embers continue independently. Reduced motion fixes the hero on the first portrait.
+- Hero atmosphere: the user-authored 7.04s `soulora-hero-background` video fills the hero as a crisp, full-bleed background, with H.264 MP4 as the primary source, VP9 WebM compatibility fallback, and a static PNG poster. All legacy blur, fog, rim, ground-glow, particle, and hero-mask layers are disabled so the source video renders cleanly without a softening overlay. Reduced motion pauses the video on its first frame.
 - Animate transform, opacity, filter, and custom gradient positions where practical.
 - Reduced motion removes continuous animation, smooth scrolling, parallax, staged delays, and auto-progress.
 
