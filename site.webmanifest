@@ -1,0 +1,23 @@
+{
+  "name": "Soulora",
+  "short_name": "Soulora",
+  "description": "An AI companion concept built around attentive listening, memory by consent, and clear boundaries.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020203",
+  "theme_color": "#020203",
+  "icons": [
+    {
+      "src": "assets/brand/soulora-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/brand/soulora-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

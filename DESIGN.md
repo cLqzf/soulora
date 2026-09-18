@@ -16,6 +16,16 @@
 
 Soulora uses a near-black cinematic canvas with warm-white rim light, restrained midnight blue, and a trace of muted wine red. The companion silhouette is the dominant emotional image. UI color is intentionally sparse: white carries hierarchy and conversion, while blue and red appear only as atmospheric light or state context.
 
+### Brand mark
+
+- The approved Soulora mark is a fluid, luminous 3D `S` on a deep-ocean background.
+- The sole owner-supplied master is preserved without redrawing at `assets/brand/soulora-mark-master.png`.
+- Navigation and footer wordmarks use the transparent `assets/brand/soulora-mark-ui-512.webp` as the first letter of `Soulora`, followed by the visible text `oulora`.
+- Product-avatar and conversion placements reuse the same transparent cutout instead of showing the mark inside a square tile.
+- Hover and keyboard focus may wake the mark with a restrained tilt. The `S` mark and `oulora` share one exact 4.5-second sweep timeline, with content-masked highlights that illuminate both simultaneously without brightening the surrounding background, then rest for approximately three seconds. The `oulora` wordmark also carries a faint downward cool-blue/violet glyph glow for atmosphere, with only a slight focus/hover lift. Reduced-motion mode removes the idle pulse, tilt, and sweep.
+- The light-sweep mask is `assets/brand/soulora-mark-mask-256.png`; browser, home-screen, PWA, and social-sharing variants live beside it and must be regenerated from `soulora-mark-master.png` when the master changes.
+- Keep the mark's aspect ratio intact and do not recolor, stretch, rotate, mask into a circle, or place it over a competing blue glow.
+
 ### Semantic color tokens
 
 | Role | Value | Usage |
@@ -42,7 +52,8 @@ Soulora uses a near-black cinematic canvas with warm-white rim light, restrained
 ## Typography
 
 - Font stack: `Inter`, `SF Pro Display`, `PingFang SC`, `Microsoft YaHei`, system UI. No remote font dependency.
-- Display: fluid `48–96px`, 520 weight, line-height `0.98–1.08`, tight tracking.
+- Hero display: extra-bold, tightly tracked system sans with one restrained script-style keyword for human warmth; the script treatment is an owned visual device, not a copied third-party font file. Stacked display lines keep a small responsive gap so dense letterforms never collide.
+- Display: fluid `48–118px`, 520–850 weight, line-height `0.86–1.08`, tight tracking.
 - Section title: fluid `36–64px`, 520 weight, line-height `1.08`.
 - Card title: `18–24px`, 560 weight.
 - Body: `16–18px`, line-height `1.7`.
@@ -66,6 +77,8 @@ Soulora uses a near-black cinematic canvas with warm-white rim light, restrained
 - Standard transition: 320–480ms.
 - Section reveal: 700–900ms.
 - Ambient motion: 8–24s and low amplitude.
+- The header brand lockup uses synchronized, content-masked 45° highlights across the `S` and `oulora`, followed by approximately three seconds of stillness. It is decorative, non-blocking, and disabled by reduced-motion preferences.
+- On desktop and landscape tablet, the three Hero product principles sit in a centered bottom safe area without a divider line. Portrait tablet keeps the principles anchored within the lower Hero grid; mobile omits this secondary group to protect the primary message and actions.
 - Hero atmosphere: the user-authored 7.04s `soulora-hero-background` video fills the hero as a crisp, full-bleed background, with H.264 MP4 as the primary source, VP9 WebM compatibility fallback, and a static PNG poster. All legacy blur, fog, rim, ground-glow, particle, and hero-mask layers are disabled so the source video renders cleanly without a softening overlay. Reduced motion pauses the video on its first frame.
 - Animate transform, opacity, filter, and custom gradient positions where practical.
 - Reduced motion removes continuous animation, smooth scrolling, parallax, staged delays, and auto-progress.
@@ -87,5 +100,7 @@ Soulora uses a near-black cinematic canvas with warm-white rim light, restrained
 - Visible 2px `:focus-visible` ring with offset.
 - One H1 and logical headings; skip link and semantic landmarks.
 - Baseline widths: 360, 768, 1024, 1440px; usable 640px reflow proxy for 200% zoom.
+- At widths up to 720px, the complete Hero message and CTA group is vertically centered in the space below the navigation rather than resting against the lower edge.
+- At 721–980px in portrait orientation, the Hero message remains centered in the upper reading field while the three product principles anchor to the lower edge of the first viewport.
 - No essential information appears only on hover or through motion.
 - Mobile navigation preserves current location and the primary CTA.
