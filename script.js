@@ -5,8 +5,21 @@ function setupHeroVideo() {
   if (!video) return;
 
   let isVisible = true;
+  let playAttemptPending = false;
   video.muted = true;
   video.defaultMuted = true;
+  video.setAttribute("muted", "");
+
+  const markPlaying = () => {
+    playAttemptPending = false;
+    document.documentElement.classList.add("hero-video-is-playing");
+    document.documentElement.classList.remove("hero-video-is-blocked");
+  };
+
+  const markBlocked = () => {
+    playAttemptPending = false;
+    document.documentElement.classList.add("hero-video-is-blocked");
+  };
 
   const syncPlayback = () => {
     if (prefersReducedMotion.matches || document.hidden || !isVisible) {
@@ -15,20 +28,52 @@ function setupHeroVideo() {
       return;
     }
 
-    const playback = video.play();
-    if (playback) playback.catch(() => {});
+    if (!video.paused || playAttemptPending) return;
+    playAttemptPending = true;
+    let playback;
+    try {
+      playback = video.play();
+    } catch (_error) {
+      markBlocked();
+      return;
+    }
+    if (playback && typeof playback.then === "function") {
+      playback.then(markPlaying).catch(markBlocked);
+    } else {
+      playAttemptPending = false;
+    }
   };
 
-  const observer = new IntersectionObserver(([entry]) => {
-    isVisible = entry.isIntersecting;
-    syncPlayback();
-  }, { threshold: 0.02 });
+  const resumeFromWechatBridge = () => {
+    const bridge = window.WeixinJSBridge;
+    if (bridge && typeof bridge.invoke === "function") {
+      bridge.invoke("getNetworkType", {}, syncPlayback);
+    } else {
+      syncPlayback();
+    }
+  };
 
-  observer.observe(video.closest(".hero") || video);
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+      syncPlayback();
+    }, { threshold: 0.02 });
+    observer.observe(video.closest(".hero") || video);
+  }
+
+  video.addEventListener("playing", markPlaying);
+  video.addEventListener("canplay", syncPlayback, { once: true });
   video.addEventListener("loadedmetadata", syncPlayback, { once: true });
+  video.addEventListener("error", markBlocked);
   document.addEventListener("visibilitychange", syncPlayback);
+  window.addEventListener("pageshow", syncPlayback);
+  document.addEventListener("WeixinJSBridgeReady", resumeFromWechatBridge, { once: true });
+  document.addEventListener("touchstart", syncPlayback, { once: true, passive: true, capture: true });
+  document.addEventListener("pointerdown", syncPlayback, { once: true, passive: true, capture: true });
   if (prefersReducedMotion.addEventListener) prefersReducedMotion.addEventListener("change", syncPlayback);
   else prefersReducedMotion.addListener(syncPlayback);
+
+  if (window.WeixinJSBridge) resumeFromWechatBridge();
   syncPlayback();
 }
 
@@ -206,6 +251,152 @@ function setupHeader() {
   window.matchMedia("(min-width: 981px)").addEventListener("change", (event) => {
     if (event.matches) setMenu(false);
   });
+}
+
+function setupAnchorNavigation() {
+  const header = document.querySelector("[data-header]");
+  const links = [...document.querySelectorAll('a[href^="#"]')];
+  let alignmentToken = 0;
+  if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+
+  const revealDestination = (section) => {
+    section.querySelectorAll(".reveal").forEach((element) => element.classList.add("is-visible"));
+  };
+
+  const destinationTop = (anchor) => {
+    const headerHeight = header?.getBoundingClientRect().height || 76;
+    const rect = anchor.getBoundingClientRect();
+    const documentTop = rect.top + window.scrollY;
+    const anchorId = anchor.id;
+    if (anchorId !== "early-access") {
+      const safeOffset = window.matchMedia("(max-width: 720px)").matches
+        ? headerHeight + 12
+        : headerHeight + 14;
+      return Math.max(0, documentTop - safeOffset);
+    }
+
+    const viewportHeight = Math.max(320, window.visualViewport?.height || window.innerHeight);
+    const viewportOffsetTop = window.visualViewport?.offsetTop || 0;
+    const freeSpace = Math.max(0, viewportHeight - Math.min(rect.height, viewportHeight));
+    const narrowLayout = window.matchMedia("(max-width: 720px)").matches;
+
+    // On desktop the transparent header only occupies the left and right edges,
+    // so the centered conversion block can safely share its vertical band. Keep
+    // the whole block close to the top of the visual viewport, as in the intended
+    // composition, instead of centering the section and hiding the form below it.
+    const desiredViewportTop = narrowLayout
+      ? Math.max(headerHeight + 12, Math.min(headerHeight + 36, freeSpace / 2))
+      : Math.max(12, Math.min(28, freeSpace / 2));
+    const parentSection = anchor.closest("section");
+    const sectionRect = parentSection?.getBoundingClientRect();
+    const sectionTop = sectionRect ? sectionRect.top + window.scrollY : 0;
+    const sectionBottom = sectionRect ? sectionRect.bottom + window.scrollY : Infinity;
+    const earliestScroll = sectionTop - viewportOffsetTop;
+    // Leave a small overlap for late font/layout shifts after the scroll settles.
+    const latestScroll = sectionBottom - viewportOffsetTop - viewportHeight - 16;
+    const preferredScroll = documentTop - viewportOffsetTop - desiredViewportTop;
+    // Keep both chapter edges outside the visual viewport: no previous chapter
+    // above the conversion canvas and no next-chapter strip below it.
+    return Math.max(0, earliestScroll, Math.min(preferredScroll, Math.max(earliestScroll, latestScroll)));
+  };
+
+  const goToHash = (hash, behavior = "smooth", moveFocus = false) => {
+    if (!hash || hash === "#") return;
+    const anchor = document.querySelector(hash);
+    if (!anchor) return;
+    const section = anchor.closest("section") || anchor;
+    const currentAlignment = ++alignmentToken;
+    revealDestination(section);
+    section.classList.remove("is-arriving");
+    window.requestAnimationFrame(() => section.classList.add("is-arriving"));
+    const instant = behavior !== "smooth";
+    if (instant) document.documentElement.classList.add("is-anchor-jumping");
+    window.scrollTo({ top: destinationTop(anchor), behavior: instant ? "auto" : "smooth" });
+    if (instant) window.requestAnimationFrame(() => document.documentElement.classList.remove("is-anchor-jumping"));
+    window.setTimeout(() => section.classList.remove("is-arriving"), prefersReducedMotion.matches ? 80 : 1100);
+
+    if (moveFocus) {
+      const focusTarget = anchor.querySelector("h1, h2") || section.querySelector("h1, h2") || anchor;
+      focusTarget.setAttribute("tabindex", "-1");
+      window.setTimeout(() => focusTarget.focus({ preventScroll: true }), prefersReducedMotion.matches ? 0 : 620);
+    }
+
+    // Font loading, viewport chrome and reveal/arrival transforms can change the
+    // geometry. Re-measure only after those transforms have fully settled.
+    // Any deliberate user interaction cancels this correction via alignmentToken.
+    window.setTimeout(() => {
+      if (currentAlignment !== alignmentToken) return;
+      const correctedTop = destinationTop(anchor);
+      if (Math.abs(window.scrollY - correctedTop) > 2) {
+        document.documentElement.classList.add("is-anchor-jumping");
+        window.scrollTo({ top: correctedTop, behavior: "auto" });
+        window.requestAnimationFrame(() => document.documentElement.classList.remove("is-anchor-jumping"));
+      }
+    }, prefersReducedMotion.matches ? 0 : 1300);
+  };
+
+  const cancelPendingAlignment = () => { alignmentToken += 1; };
+  window.addEventListener("wheel", cancelPendingAlignment, { passive: true });
+  window.addEventListener("touchstart", cancelPendingAlignment, { passive: true });
+  window.addEventListener("pointerdown", cancelPendingAlignment, { passive: true });
+  window.addEventListener("keydown", cancelPendingAlignment);
+
+  links.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const hash = link.getAttribute("href");
+      if (!hash || !document.querySelector(hash)) return;
+      event.preventDefault();
+      if (window.location.hash !== hash) window.history.pushState(null, "", hash);
+      goToHash(hash, prefersReducedMotion.matches ? "auto" : "smooth", true);
+    });
+  });
+
+  window.addEventListener("hashchange", () => goToHash(window.location.hash, prefersReducedMotion.matches ? "auto" : "smooth"));
+  const alignInitialHash = () => {
+    if (!window.location.hash) return;
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => goToHash(window.location.hash, "auto")));
+    window.setTimeout(() => goToHash(window.location.hash, "auto"), 180);
+  };
+
+  if (document.readyState === "complete") alignInitialHash();
+  else window.addEventListener("load", alignInitialHash, { once: true });
+  if (document.fonts?.ready) document.fonts.ready.then(alignInitialHash);
+  window.addEventListener("pageshow", alignInitialHash);
+}
+
+function setupSectionProgress() {
+  const progress = document.querySelector("[data-section-progress]");
+  if (!progress) return;
+  const links = [...progress.querySelectorAll("[data-section-link]")];
+  const sections = links.map((link) => document.querySelector(`[data-scroll-section="${link.dataset.sectionLink}"]`)).filter(Boolean);
+  const hero = document.querySelector(".hero");
+
+  const updateVisibility = () => {
+    const threshold = Math.max(320, (hero?.offsetHeight || window.innerHeight) * 0.72);
+    progress.classList.toggle("is-visible", window.scrollY > threshold);
+  };
+
+  const activate = (id) => {
+    links.forEach((link) => {
+      const current = link.dataset.sectionLink === id;
+      link.classList.toggle("is-active", current);
+      if (current) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+  };
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) activate(visible.target.dataset.scrollSection);
+    }, { rootMargin: "-22% 0px -56%", threshold: [0.01, 0.18, 0.4] });
+    sections.forEach((section) => observer.observe(section));
+  }
+
+  updateVisibility();
+  window.addEventListener("scroll", updateVisibility, { passive: true });
 }
 
 function setupPointerLight() {
@@ -519,15 +710,27 @@ function setupTimeline() {
   const timeline = document.querySelector("[data-timeline]");
   const progress = timeline?.querySelector("[data-timeline-progress]");
   const moments = timeline ? [...timeline.querySelectorAll(".moment")] : [];
-  if (!timeline || !progress || !moments.length || !("IntersectionObserver" in window)) return;
+  if (!timeline || !progress || !moments.length) return;
+
+  const activate = (activeMoment) => {
+    moments.forEach((moment) => moment.classList.toggle("is-current", moment === activeMoment));
+    const index = moments.indexOf(activeMoment);
+    timeline.style.setProperty("--timeline-progress", `${18 + index * 41}%`);
+  };
+
+  moments.forEach((moment) => {
+    moment.addEventListener("pointerenter", () => activate(moment));
+    moment.addEventListener("focus", () => activate(moment));
+    moment.addEventListener("click", () => activate(moment));
+  });
+
+  if (!("IntersectionObserver" in window)) return;
 
   const observer = new IntersectionObserver(
     (entries) => {
       const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
       if (!visible) return;
-      moments.forEach((moment) => moment.classList.toggle("is-current", moment === visible.target));
-      const index = moments.indexOf(visible.target);
-      timeline.style.setProperty("--timeline-progress", `${18 + index * 41}%`);
+      activate(visible.target);
     },
     { rootMargin: "-25% 0px -45%", threshold: [0.1, 0.35, 0.6] }
   );
@@ -616,6 +819,8 @@ setupHeroVideo();
 setupHeroAtmosphere();
 setupReveal();
 setupHeader();
+setupAnchorNavigation();
+setupSectionProgress();
 setupPointerLight();
 setupExperienceTabs();
 setupConversationDemo();
