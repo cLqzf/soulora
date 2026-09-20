@@ -226,6 +226,7 @@ function setupHeader() {
   const toggle = document.querySelector("[data-menu-toggle]");
   const menu = document.querySelector("[data-mobile-menu]");
   if (!header || !toggle || !menu) return;
+  const menuLinks = [...menu.querySelectorAll("a")];
 
   const updateHeader = () => header.classList.toggle("is-scrolled", window.scrollY > 20);
   const setMenu = (open, restoreFocus = false) => {
@@ -244,9 +245,25 @@ function setupHeader() {
   updateHeader();
   window.addEventListener("scroll", updateHeader, { passive: true });
   toggle.addEventListener("click", () => setMenu(toggle.getAttribute("aria-expanded") !== "true"));
-  menu.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => setMenu(false)));
+  menuLinks.forEach((link) => link.addEventListener("click", () => setMenu(false)));
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") setMenu(false, true);
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    if (!open) return;
+    if (event.key === "Escape") {
+      setMenu(false, true);
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const focusable = [toggle, ...menuLinks];
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   });
   window.matchMedia("(min-width: 981px)").addEventListener("change", (event) => {
     if (event.matches) setMenu(false);
@@ -257,6 +274,7 @@ function setupAnchorNavigation() {
   const header = document.querySelector("[data-header]");
   const links = [...document.querySelectorAll('a[href^="#"]')];
   let alignmentToken = 0;
+  let initialAlignmentQueued = false;
   if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
 
   const revealDestination = (section) => {
@@ -318,7 +336,14 @@ function setupAnchorNavigation() {
     if (moveFocus) {
       const focusTarget = anchor.querySelector("h1, h2") || section.querySelector("h1, h2") || anchor;
       focusTarget.setAttribute("tabindex", "-1");
-      window.setTimeout(() => focusTarget.focus({ preventScroll: true }), prefersReducedMotion.matches ? 0 : 620);
+      window.setTimeout(() => {
+        if (currentAlignment !== alignmentToken) {
+          focusTarget.removeAttribute("tabindex");
+          return;
+        }
+        focusTarget.focus({ preventScroll: true });
+        focusTarget.addEventListener("blur", () => focusTarget.removeAttribute("tabindex"), { once: true });
+      }, prefersReducedMotion.matches ? 0 : 620);
     }
 
     // Font loading, viewport chrome and reveal/arrival transforms can change the
@@ -353,15 +378,19 @@ function setupAnchorNavigation() {
 
   window.addEventListener("hashchange", () => goToHash(window.location.hash, prefersReducedMotion.matches ? "auto" : "smooth"));
   const alignInitialHash = () => {
-    if (!window.location.hash) return;
+    if (!window.location.hash || initialAlignmentQueued) return;
+    initialAlignmentQueued = true;
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => goToHash(window.location.hash, "auto")));
-    window.setTimeout(() => goToHash(window.location.hash, "auto"), 180);
   };
 
   if (document.readyState === "complete") alignInitialHash();
   else window.addEventListener("load", alignInitialHash, { once: true });
   if (document.fonts?.ready) document.fonts.ready.then(alignInitialHash);
-  window.addEventListener("pageshow", alignInitialHash);
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    initialAlignmentQueued = false;
+    alignInitialHash();
+  });
 }
 
 function setupSectionProgress() {
@@ -380,6 +409,11 @@ function setupSectionProgress() {
     links.forEach((link) => {
       const current = link.dataset.sectionLink === id;
       link.classList.toggle("is-active", current);
+      if (current) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+    document.querySelectorAll("[data-mobile-menu] a[href^='#'], .desktop-nav a[href^='#']").forEach((link) => {
+      const current = link.getAttribute("href") === `#${id}`;
       if (current) link.setAttribute("aria-current", "location");
       else link.removeAttribute("aria-current");
     });
@@ -403,22 +437,38 @@ function setupPointerLight() {
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
   const stage = document.querySelector("[data-tilt-stage]");
   if (!finePointer.matches || prefersReducedMotion.matches) return;
+  let pointerFrame = 0;
+  let pointerX = window.innerWidth / 2;
+  let pointerY = window.innerHeight / 2;
+  let stageFrame = 0;
+  let stageEvent = null;
 
   window.addEventListener(
     "pointermove",
     (event) => {
-      document.documentElement.style.setProperty("--pointer-x", `${event.clientX}px`);
-      document.documentElement.style.setProperty("--pointer-y", `${event.clientY}px`);
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (pointerFrame) return;
+      pointerFrame = window.requestAnimationFrame(() => {
+        document.documentElement.style.setProperty("--pointer-x", `${pointerX}px`);
+        document.documentElement.style.setProperty("--pointer-y", `${pointerY}px`);
+        pointerFrame = 0;
+      });
     },
     { passive: true }
   );
 
   stage?.addEventListener("pointermove", (event) => {
-    const rect = stage.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
-    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
-    stage.style.setProperty("--tilt-x", x.toFixed(3));
-    stage.style.setProperty("--tilt-y", y.toFixed(3));
+    stageEvent = event;
+    if (stageFrame) return;
+    stageFrame = window.requestAnimationFrame(() => {
+      const rect = stage.getBoundingClientRect();
+      const x = ((stageEvent.clientX - rect.left) / rect.width - 0.5) * 2;
+      const y = ((stageEvent.clientY - rect.top) / rect.height - 0.5) * 2;
+      stage.style.setProperty("--tilt-x", x.toFixed(3));
+      stage.style.setProperty("--tilt-y", y.toFixed(3));
+      stageFrame = 0;
+    });
   });
   stage?.addEventListener("pointerleave", () => {
     stage.style.setProperty("--tilt-x", "0");
@@ -474,11 +524,21 @@ function setupConversationDemo() {
   const input = document.querySelector("#demo-message");
   const thread = document.querySelector("#demo-thread");
   if (!form || !input || !thread) return;
+  const submit = form.querySelector("button[type='submit']");
+  const quickReplies = [...document.querySelectorAll("[data-quick-reply]")];
 
   let responding = false;
+  const setResponding = (busy) => {
+    responding = busy;
+    form.setAttribute("aria-busy", String(busy));
+    thread.setAttribute("aria-busy", String(busy));
+    input.disabled = busy;
+    if (submit) submit.disabled = busy;
+    quickReplies.forEach((button) => { button.disabled = busy; });
+  };
   const respond = (value) => {
     if (responding || !value.trim()) return;
-    responding = true;
+    setResponding(true);
     thread.append(createMessage(value.trim(), "user"));
     input.value = "";
 
@@ -504,7 +564,7 @@ function setupConversationDemo() {
       typing.removeAttribute("aria-label");
       typing.textContent = calmReply;
       thread.scrollTop = thread.scrollHeight;
-      responding = false;
+      setResponding(false);
     }, prefersReducedMotion.matches ? 50 : 850);
   };
 
@@ -512,9 +572,23 @@ function setupConversationDemo() {
     event.preventDefault();
     respond(input.value);
   });
-  document.querySelectorAll("[data-quick-reply]").forEach((button) => {
+  quickReplies.forEach((button) => {
     button.addEventListener("click", () => respond(button.dataset.quickReply || ""));
   });
+}
+
+function setupAmbientMotionBudget() {
+  if (prefersReducedMotion.matches || !("IntersectionObserver" in window)) return;
+  const regions = [".principle-rail", ".avatar-lab", ".experience", ".system", ".early-access", ".site-footer"]
+    .map((selector) => document.querySelector(selector))
+    .filter(Boolean);
+  if (!regions.length) return;
+
+  document.documentElement.classList.add("motion-budgeted");
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => entry.target.classList.toggle("is-motion-active", entry.isIntersecting));
+  }, { rootMargin: "12% 0px", threshold: 0.01 });
+  regions.forEach((region) => observer.observe(region));
 }
 
 function setupMemoryDemo() {
@@ -773,6 +847,7 @@ function setupAccessForm() {
   input.addEventListener("input", () => {
     if (input.getAttribute("aria-invalid") === "true") validate();
     result.textContent = "";
+    delete result.dataset.state;
   });
 
   form.addEventListener("submit", async (event) => {
@@ -786,12 +861,15 @@ function setupAccessForm() {
     const label = submit.querySelector("span");
     submit.classList.add("is-loading");
     submit.disabled = true;
+    form.setAttribute("aria-busy", "true");
     label.textContent = "Checking…";
     result.textContent = "";
+    delete result.dataset.state;
 
     try {
       if (!endpoint) {
         await new Promise((resolve) => window.setTimeout(resolve, prefersReducedMotion.matches ? 50 : 650));
+        result.dataset.state = "preview";
         result.textContent = "Preview complete: your email format is valid, but no application endpoint is configured, so nothing was uploaded or saved.";
         return;
       }
@@ -802,14 +880,17 @@ function setupAccessForm() {
         body: JSON.stringify({ email: input.value.trim() })
       });
       if (!response.ok) throw new Error("Request failed");
+      result.dataset.state = "success";
       result.textContent = "Application submitted. We'll contact you by email when early access opens.";
       form.reset();
       field.classList.remove("is-valid");
     } catch {
+      result.dataset.state = "error";
       result.textContent = "We couldn't submit your application. Try again later—your input has been kept.";
     } finally {
       submit.classList.remove("is-loading");
       submit.disabled = false;
+      form.setAttribute("aria-busy", "false");
       label.textContent = "Apply for early access";
     }
   });
@@ -822,6 +903,7 @@ setupHeader();
 setupAnchorNavigation();
 setupSectionProgress();
 setupPointerLight();
+setupAmbientMotionBudget();
 setupExperienceTabs();
 setupConversationDemo();
 setupMemoryDemo();

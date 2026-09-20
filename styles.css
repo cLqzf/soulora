@@ -951,6 +951,174 @@ html, body { background: #020203; }
   }
 }
 
+/* Interaction, legibility and motion-budget refinement. */
+@media (min-width: 981px) {
+  .site-header .nav-cta {
+    grid-column: 3;
+    display: inline-flex;
+  }
+}
+
+.section-progress a {
+  min-height: 44px;
+}
+
+.mobile-menu[aria-label] {
+  overscroll-behavior: contain;
+}
+
+.site-header.is-open .mobile-menu {
+  animation: menuReveal .28s var(--ease) both;
+}
+
+.site-header.is-open .mobile-menu > a {
+  animation: menuItemReveal .36s var(--ease) both;
+}
+
+.site-header.is-open .mobile-menu > a:nth-child(2) { animation-delay: .025s; }
+.site-header.is-open .mobile-menu > a:nth-child(3) { animation-delay: .05s; }
+.site-header.is-open .mobile-menu > a:nth-child(4) { animation-delay: .075s; }
+.site-header.is-open .mobile-menu > a:nth-child(5) { animation-delay: .1s; }
+.site-header.is-open .mobile-menu > a:nth-child(6) { animation-delay: .125s; }
+.site-header.is-open .mobile-menu > a:nth-child(7) { animation-delay: .15s; }
+
+.mobile-menu a[aria-current="location"]:not(.mobile-menu-cta) {
+  color: #fff;
+}
+
+.mobile-menu a[aria-current="location"]:not(.mobile-menu-cta)::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 14px rgba(255,255,255,.5);
+}
+
+:where(.button, .nav-cta, .compact-button, .voice-toggle, .menu-toggle, .avatar-picker button, .mode-tabs button, .setting-list button, .faq-list summary):active {
+  transform: translateY(1px) scale(.985);
+}
+
+.compact-button.compact-primary:is(:hover, :focus-visible) {
+  color: #050506;
+  background: #f0ede8;
+  border-color: transparent;
+}
+
+:where(button, input, textarea):disabled {
+  cursor: not-allowed;
+}
+
+.demo-composer[aria-busy="true"],
+.quick-replies button:disabled {
+  opacity: .58;
+}
+
+.form-result[data-state="preview"] { color: var(--warning); }
+.form-result[data-state="success"] { color: var(--success); }
+.form-result[data-state="error"] { color: var(--danger); }
+
+.section-label,
+.mode-tabs button small,
+.quick-replies button,
+.compact-button,
+.memory-edit label,
+.setting-list small,
+.system-flow small,
+.avatar-picker button small,
+.field-group > small,
+.field-error,
+.console-items small,
+.console-items > div > span:last-child,
+.console-note {
+  font-size: max(10px, .6875rem);
+}
+
+.card-topline,
+.panel-heading span,
+.avatar-preview-top,
+.avatar-control-heading small,
+.avatar-control-heading > span,
+.avatar-picker button em,
+.avatar-tech small,
+.avatar-tech > small,
+.concept-note,
+.setting-feedback,
+.console-header small,
+.console-status,
+.access-meta,
+.footer-grid > div:first-child > p,
+.footer-links strong,
+.footer-state small,
+.footer-bottom {
+  font-size: 10px;
+}
+
+.form-result {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.motion-budgeted .rail-track,
+.motion-budgeted .avatar-wave i,
+.motion-budgeted .avatar-light,
+.motion-budgeted .rhythm-visual span,
+.motion-budgeted .access-light,
+.motion-budgeted .access-orbit-b,
+.motion-budgeted .section .live-dot,
+.motion-budgeted .avatar-live i,
+.motion-budgeted .site-footer .live-dot,
+.motion-budgeted .site-footer .brand-orb {
+  animation-play-state: paused;
+}
+
+.motion-budgeted .is-motion-active .rail-track,
+.motion-budgeted .is-motion-active .avatar-wave i,
+.motion-budgeted .is-motion-active .avatar-light,
+.motion-budgeted .is-motion-active .rhythm-visual span,
+.motion-budgeted .is-motion-active .access-light,
+.motion-budgeted .is-motion-active .access-orbit-b,
+.motion-budgeted .section.is-motion-active .live-dot,
+.motion-budgeted .is-motion-active .avatar-live i,
+.motion-budgeted .site-footer.is-motion-active .live-dot,
+.motion-budgeted .site-footer.is-motion-active .brand-orb {
+  animation-play-state: running;
+}
+
+@keyframes menuReveal {
+  from { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes menuItemReveal {
+  from { opacity: 0; transform: translateY(-6px); }
+}
+
+@media (max-width: 720px) {
+  .mobile-menu > a:not(.mobile-menu-cta) {
+    min-height: 64px;
+    font-size: clamp(20px, 6vw, 24px);
+  }
+
+  .mobile-menu {
+    padding-top: 18px;
+  }
+
+  .field-group > small,
+  .field-error {
+    font-size: 10px;
+    line-height: 1.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header.is-open .mobile-menu,
+  .site-header.is-open .mobile-menu > a {
+    animation: none;
+  }
+}
+
 /* Editorial experience upgrade — every chapter after the hero. */
 #avatars,
 #experience,
@@ -1977,4 +2145,17 @@ html, body { background: #020203; }
     line-height: 1.55;
     letter-spacing: -.015em;
   }
+}
+
+/* Keep press feedback authoritative over later hover refinements. */
+.button:active,
+.nav-cta:active,
+.compact-button:active,
+.voice-toggle:active,
+.menu-toggle:active,
+.avatar-picker button:active,
+.mode-tabs button:active,
+.setting-list button:active,
+.faq-list summary:active {
+  transform: translateY(1px) scale(.985);
 }
