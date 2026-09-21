@@ -41,7 +41,7 @@ python3 -m http.server 4173
 ## SEO 配置与验证
 
 - 首页使用原生 HTML metadata、自引用 canonical、绝对地址的 Open Graph/Twitter 分享图，以及与概念预览状态一致的 `WebSite` / `WebPage` JSON-LD。
-- `robots.txt` 允许公开页面抓取并声明 `sitemap.xml`；站点地图仅包含现有首页，不包含页内锚点、追踪参数或尚未存在的语言页面。
+- `robots.txt` 允许公开页面抓取并声明 `sitemap.xml`；站点地图包含首页、使用流程和选择指南，不包含页内锚点、追踪参数或尚未存在的语言页面。
 - `vercel.json` 声明 `www.soulora.ai` 到非 www 域名的永久跳转。部署后需确认 Vercel 域名层配置没有优先返回原有的 307 临时跳转。
 - 新增真实可索引页面时，同步维护唯一 metadata、自引用 canonical、站点地图和内部链接；只有发布完整语言版本后才配置对应 hreflang。
 - 未添加软件评分、下载地址、运营主体 schema 或定价，因为当前没有对应的真实产品信息。
@@ -50,6 +50,17 @@ python3 -m http.server 4173
 项目为零依赖静态站，没有 `package.json`、lint/typecheck 脚本或 build 步骤。不要把这些缺失的命令记录为通过。可运行 `node --check script.js` 检查 JavaScript 语法，并解析 HTML、JSON-LD、XML 和配置文件，核对本地资源、内部锚点与规范 URL；部署产物即源 HTML/CSS/JS 和静态资源，无需构建。
 
 上线后复查 `/`、`/robots.txt`、`/sitemap.xml` 的响应、主域跳转和 CDN 标头。搜索引擎收录、Core Web Vitals 与 AI 搜索引用需要另外测量，不能由静态验证推断。
+
+## 内容页面
+
+- `/how-it-works`（`how-it-works.html`）：介绍当前可尝试的演示、许可式记忆设计、语音/形象概念，以及平台、语言和产品状态。
+- `/guides/choose-ai-companion`（`guides/choose-ai-companion.html`）：按会话用途、记忆控制、语音/语言、数据处理、平台和费用提供选择清单。不是产品排名或未实测的竞品比较。
+- `content.css` 复用现有设计变量；新页面只用原生 HTML/CSS，不加载主页业务脚本。每页都有独立 metadata、canonical、WebPage/WebSite 和 BreadcrumbList。
+- 新页面通过 Vercel 原生 `cleanUrls` 使用不带 `.html`、不带尾斜杠的路径。Python 简单文件服务器预览时，直接访问 `/how-it-works.html` 和 `/guides/choose-ai-companion.html`；它不会自动模拟 Vercel 的无扩展名路由。
+- 首页和新页面互相链接。当前仍只有英文，不加入指向不存在翻译页的 hreflang。产品能力、政策和下载渠道准备好后，再创建相应页面。
+- 发布真实服务或收集接口时，同步更新首页产品状态、反馈介绍、使用流程中的可用性表格与 FAQ、选择指南的 Soulora 状态，以及对应 metadata。不能只启用接口而留下旧的预览说明。
+
+运行 `python3 scripts/verify_site.py` 可复查本地页面 metadata、结构化数据、站点地图、内部链接和资源引用；它不代替真实部署的 HTTP、抓取或排名验证。
 
 ## 设计与实施文档
 
