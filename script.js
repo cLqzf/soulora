@@ -1031,7 +1031,8 @@ function setupAccessForm() {
     submit.classList.add("is-loading");
     submit.disabled = true;
     form.setAttribute("aria-busy", "true");
-    label.textContent = "Sharing…";
+    const idleLabel = label.textContent;
+    label.textContent = endpoint ? "Sharing…" : "Checking preview…";
     clearResult();
 
     try {
@@ -1060,7 +1061,7 @@ function setupAccessForm() {
       submit.classList.remove("is-loading");
       submit.disabled = false;
       form.setAttribute("aria-busy", "false");
-      label.textContent = "Share my perspective";
+      label.textContent = idleLabel;
     }
   });
 

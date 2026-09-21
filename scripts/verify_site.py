@@ -68,7 +68,18 @@ def check():
 
     published_files = {source_for(urlsplit(url).path).resolve() for url in urls}
     html_files = {path.resolve() for path in ROOT.rglob("*.html") if not any(part.startswith(".") or part in {"node_modules", "dist"} for part in path.relative_to(ROOT).parts)}
-    require(html_files == published_files, "An HTML page is missing from the sitemap or publication policy")
+    error_file = ROOT / "404.html"
+    require(html_files == published_files | {error_file.resolve()}, "An HTML page is missing from the sitemap or publication policy")
+    error_page = Page(error_file.read_text())
+    require(sum(tag == "h1" for tag, _ in error_page.tags) == 1, "404: H1 count")
+    require(any(tag == "meta" and attrs.get("name") == "robots" and "noindex" in attrs.get("content", "") for tag, attrs in error_page.tags), "404: missing noindex")
+    require(not any(tag == "link" and attrs.get("rel") == "canonical" for tag, attrs in error_page.tags), "404: must not canonicalize to a valid page")
+    require(ORIGIN + "/404" not in urls, "404: must not be in sitemap")
+    for tag, attrs in error_page.tags:
+        if tag == "a" and attrs.get("href", "").startswith("/"):
+            require(ORIGIN + attrs["href"] in pages, "404: invalid recovery link")
+        if tag == "link" and attrs.get("rel") in {"stylesheet", "icon"}:
+            require((ROOT / urlsplit(attrs["href"]).path.lstrip("/")).is_file(), "404: missing resource")
     titles, descriptions, graph = [], [], {url: set() for url in urls}
     link_count = 0
 
@@ -120,7 +131,7 @@ def check():
                 require(not target.fragment or unquote(target.fragment) in target_ids, prefix + ": missing fragment " + attrs["href"])
                 graph[url].add(destination)
                 link_count += 1
-            keys = ["src", "poster"] if tag in {"script", "img", "video", "source"} else ["href"] if tag == "link" and attrs.get("rel") in {"stylesheet", "icon", "apple-touch-icon", "manifest"} else []
+            keys = ["src", "poster"] if tag in {"script", "img", "video", "source"} else ["href"] if tag == "link" and attrs.get("rel") in {"stylesheet", "icon", "apple-touch-icon", "manifest", "preload"} else []
             for key in keys:
                 if attrs.get(key):
                     asset = urlsplit(urljoin(url, attrs[key]))
@@ -148,6 +159,7 @@ def check():
     require(config.get("cleanUrls") is True and config.get("trailingSlash") is False, "Clean URL config changed")
     print(f"PASS: {len(pages)} pages, unique metadata, canonical, JSON-LD, breadcrumbs, robots and sitemap")
     print(f"PASS: {link_count} internal links and their fragments; no orphan pages; local asset references")
+    print("PASS: 404 has noindex, valid recovery links, and is excluded from the sitemap")
 
 
 if __name__ == "__main__":
