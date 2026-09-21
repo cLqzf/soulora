@@ -881,11 +881,75 @@ function setupAccessForm() {
   const input = document.querySelector("#email");
   const error = document.querySelector("#email-error");
   const result = document.querySelector("#form-result");
-  const field = form?.querySelector(".field-group");
+  const field = input?.closest(".field-group");
   const submit = form?.querySelector("button[type='submit']");
-  if (!form || !input || !error || !result || !field || !submit) return;
+  const panel = document.querySelector("[data-feedback-panel]");
+  const steps = form ? [...form.querySelectorAll("[data-form-step]")] : [];
+  const next = form?.querySelector("[data-next-step]");
+  const previous = form?.querySelector("[data-previous-step]");
+  const progress = panel?.querySelector("[data-form-progress]");
+  const stepTitle = panel?.querySelector("[data-step-title]");
+  const intentError = document.querySelector("#intent-error");
+  const platformError = document.querySelector("#platform-error");
+  const momentInputs = form ? [...form.querySelectorAll("input[name='moments']")] : [];
+  const platformInputs = form ? [...form.querySelectorAll("input[name='platform']")] : [];
+  const note = document.querySelector("#feedback-note");
+  const count = document.querySelector("#feedback-count");
+  const resultTitle = result?.querySelector("[data-result-title]");
+  const resultMessage = result?.querySelector("[data-result-message]");
+  const privacyNote = panel?.querySelector(".feedback-privacy span");
+  if (!form || !input || !error || !result || !field || !submit || steps.length !== 2 || !next || !previous || !panel) return;
 
-  const validate = () => {
+  let currentStep = 0;
+
+  const clearResult = () => {
+    result.hidden = true;
+    delete result.dataset.state;
+    if (resultTitle) resultTitle.textContent = "";
+    if (resultMessage) resultMessage.textContent = "";
+  };
+
+  const showResult = (state, title, message) => {
+    result.dataset.state = state;
+    result.hidden = false;
+    if (resultTitle) resultTitle.textContent = title;
+    if (resultMessage) resultMessage.textContent = message;
+  };
+
+  const setStep = (index, moveFocus = true) => {
+    currentStep = Math.max(0, Math.min(index, steps.length - 1));
+    steps.forEach((step, stepIndex) => { step.hidden = stepIndex !== currentStep; });
+    progress.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+    stepTitle.textContent = currentStep === 0 ? "Your moment" : "Stay close";
+    panel.dataset.currentStep = String(currentStep + 1);
+    clearResult();
+    if (moveFocus) {
+      const focusTarget = steps[currentStep].querySelector("legend, input, textarea, button");
+      if (focusTarget?.matches("legend")) focusTarget.setAttribute("tabindex", "-1");
+      focusTarget?.focus({ preventScroll: true });
+    }
+  };
+
+  const selectedMoments = () => momentInputs.filter((item) => item.checked);
+
+  const validateIntent = () => {
+    const selected = selectedMoments();
+    let message = "";
+    if (!selected.length) message = "Choose at least one moment so we know what matters to you.";
+    else if (selected.length > 2) message = "Choose no more than two moments.";
+    if (intentError) intentError.textContent = message;
+    momentInputs.forEach((item) => item.setAttribute("aria-invalid", String(Boolean(message))));
+    return !message;
+  };
+
+  const validatePlatform = () => {
+    const valid = platformInputs.some((item) => item.checked);
+    if (platformError) platformError.textContent = valid ? "" : "Choose one platform, including “Not sure”.";
+    platformInputs.forEach((item) => item.setAttribute("aria-invalid", String(!valid)));
+    return valid;
+  };
+
+  const validateEmail = () => {
     const value = input.value.trim();
     let message = "";
     if (!value) message = "Enter your email address.";
@@ -896,57 +960,114 @@ function setupAccessForm() {
     return !message;
   };
 
-  input.addEventListener("blur", validate);
+  momentInputs.forEach((momentInput) => {
+    momentInput.addEventListener("change", () => {
+      if (selectedMoments().length > 2) {
+        momentInput.checked = false;
+        if (intentError) intentError.textContent = "Choose up to two moments. You can change either selection.";
+        return;
+      }
+      validateIntent();
+      clearResult();
+    });
+  });
+
+  platformInputs.forEach((platformInput) => platformInput.addEventListener("change", () => {
+    validatePlatform();
+    clearResult();
+  }));
+
+  note?.addEventListener("input", () => {
+    if (count) count.textContent = `${note.value.length} / ${note.maxLength}`;
+    clearResult();
+  });
+
+  next.addEventListener("click", () => {
+    if (!validateIntent()) {
+      momentInputs[0]?.focus();
+      return;
+    }
+    setStep(1);
+  });
+
+  previous.addEventListener("click", () => setStep(0));
+
+  input.addEventListener("blur", validateEmail);
   input.addEventListener("input", () => {
-    if (input.getAttribute("aria-invalid") === "true") validate();
-    result.textContent = "";
-    delete result.dataset.state;
+    if (input.getAttribute("aria-invalid") === "true") validateEmail();
+    clearResult();
   });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!validate()) {
+    if (!validateIntent()) {
+      setStep(0, false);
+      momentInputs[0]?.focus();
+      return;
+    }
+    if (!validatePlatform()) {
+      setStep(1, false);
+      platformInputs[0]?.focus();
+      return;
+    }
+    if (!validateEmail()) {
+      setStep(1, false);
       input.focus();
       return;
     }
 
     const endpoint = form.dataset.endpoint?.trim();
     const label = submit.querySelector("span");
+    const formData = new FormData(form);
+    const payload = {
+      email: input.value.trim(),
+      moments: formData.getAll("moments"),
+      feedback: String(formData.get("feedback_note") || "").trim(),
+      platform: String(formData.get("platform") || ""),
+      researchOptIn: formData.get("research_opt_in") === "on",
+      source: "soulora-early-access",
+      submittedAt: new Date().toISOString()
+    };
     submit.classList.add("is-loading");
     submit.disabled = true;
     form.setAttribute("aria-busy", "true");
-    label.textContent = "Checking…";
-    result.textContent = "";
-    delete result.dataset.state;
+    label.textContent = "Sharing…";
+    clearResult();
 
     try {
       if (!endpoint) {
         await new Promise((resolve) => window.setTimeout(resolve, prefersReducedMotion.matches ? 50 : 650));
-        result.dataset.state = "preview";
-        result.textContent = "Preview complete: your email format is valid, but no application endpoint is configured, so nothing was uploaded or saved.";
+        showResult("preview", "The feedback flow is ready.", "This is still a transparent preview: your answers were validated here, but nothing was uploaded or saved because no secure endpoint is configured yet.");
         return;
       }
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: input.value.trim() })
+        body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error("Request failed");
-      result.dataset.state = "success";
-      result.textContent = "Application submitted. We'll contact you by email when early access opens.";
+      showResult("success", "Thank you—we heard you.", "Your perspective has been shared. We'll only use your email for the research and early-access choices you made.");
       form.reset();
       field.classList.remove("is-valid");
+      if (count) count.textContent = `0 / ${note?.maxLength || 320}`;
+      panel.classList.add("is-complete");
+      progress.textContent = "Complete";
+      stepTitle.textContent = "Response received";
     } catch {
-      result.dataset.state = "error";
-      result.textContent = "We couldn't submit your application. Try again later—your input has been kept.";
+      showResult("error", "Your response wasn't sent.", "Please try again in a moment. Your choices are still here, so you won't need to start over.");
     } finally {
       submit.classList.remove("is-loading");
       submit.disabled = false;
       form.setAttribute("aria-busy", "false");
-      label.textContent = "Apply for early access";
+      label.textContent = "Share my perspective";
     }
   });
+
+  if (form.dataset.endpoint?.trim() && privacyNote) {
+    privacyNote.textContent = "Your response is sent only to the configured research endpoint. Publish the final privacy and deletion policy before launch.";
+  }
+  setStep(0, false);
 }
 
 setupViewportAdaptation();
