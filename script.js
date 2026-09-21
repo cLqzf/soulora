@@ -1,5 +1,58 @@
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+function setupViewportAdaptation() {
+  const root = document.documentElement;
+  const header = document.querySelector("[data-header]");
+  const viewport = window.visualViewport;
+  let frame = 0;
+  let lastWidth = 0;
+  let lastHeight = 0;
+  let lastOffsetTop = -1;
+  let lastHeaderHeight = 0;
+
+  const update = () => {
+    frame = 0;
+    const width = Math.max(1, Math.round(viewport?.width || root.clientWidth || window.innerWidth));
+    const height = Math.max(1, Math.round(viewport?.height || window.innerHeight));
+    const offsetTop = Math.max(0, Math.round(viewport?.offsetTop || 0));
+    if (width !== lastWidth) {
+      lastWidth = width;
+      root.style.setProperty("--viewport-width", `${width}px`);
+    }
+    if (height !== lastHeight) {
+      lastHeight = height;
+      root.style.setProperty("--viewport-height", `${height}px`);
+    }
+    if (offsetTop !== lastOffsetTop) {
+      lastOffsetTop = offsetTop;
+      root.style.setProperty("--viewport-offset-top", `${offsetTop}px`);
+    }
+    if (header) {
+      const headerHeight = Math.ceil(header.getBoundingClientRect().height);
+      if (headerHeight !== lastHeaderHeight) {
+        lastHeaderHeight = headerHeight;
+        root.style.setProperty("--header-height", `${headerHeight}px`);
+      }
+    }
+  };
+
+  const scheduleUpdate = () => {
+    if (frame) return;
+    frame = window.requestAnimationFrame(update);
+  };
+
+  update();
+  window.addEventListener("resize", scheduleUpdate, { passive: true });
+  window.addEventListener("orientationchange", scheduleUpdate, { passive: true });
+  window.addEventListener("pageshow", scheduleUpdate);
+  viewport?.addEventListener("resize", scheduleUpdate, { passive: true });
+  viewport?.addEventListener("scroll", scheduleUpdate, { passive: true });
+  if (header && "ResizeObserver" in window) {
+    const headerObserver = new ResizeObserver(scheduleUpdate);
+    headerObserver.observe(header, { box: "border-box" });
+  }
+}
+
 function setupHeroVideo() {
   const video = document.querySelector("[data-hero-video]");
   if (!video) return;
@@ -896,6 +949,7 @@ function setupAccessForm() {
   });
 }
 
+setupViewportAdaptation();
 setupHeroVideo();
 setupHeroAtmosphere();
 setupReveal();
