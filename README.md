@@ -33,10 +33,23 @@ python3 -m http.server 4173
 ## 上线前配置
 
 1. 为 `#access-form` 的 `data-endpoint` 配置真实、受保护的申请接口。接口接收 `email`、`moments`、`feedback`、`platform`、`researchOptIn`、`source` 与 `submittedAt` JSON 字段。
-2. 补充正式域名的 canonical、Open Graph 分享图和联系主体。
+2. 补充真实的运营主体和联系信息；正式域名已统一为 `https://soulora.ai/`。
 3. 发布完整的隐私政策、服务条款、数据保留与删除说明。
 4. 对真实产品的记忆、加密、危机响应和模型供应商进行合规与安全验证。
 5. 在有证据后再添加用户规模、商店下载、合作品牌或认证信息。
+
+## SEO 配置与验证
+
+- 首页使用原生 HTML metadata、自引用 canonical、绝对地址的 Open Graph/Twitter 分享图，以及与概念预览状态一致的 `WebSite` / `WebPage` JSON-LD。
+- `robots.txt` 允许公开页面抓取并声明 `sitemap.xml`；站点地图仅包含现有首页，不包含页内锚点、追踪参数或尚未存在的语言页面。
+- `vercel.json` 声明 `www.soulora.ai` 到非 www 域名的永久跳转。部署后需确认 Vercel 域名层配置没有优先返回原有的 307 临时跳转。
+- 新增真实可索引页面时，同步维护唯一 metadata、自引用 canonical、站点地图和内部链接；只有发布完整语言版本后才配置对应 hreflang。
+- 未添加软件评分、下载地址、运营主体 schema 或定价，因为当前没有对应的真实产品信息。
+- 外部脚本成功初始化内容显现后才移除 `no-js`，脚本加载失败时保留可阅读正文。
+
+项目为零依赖静态站，没有 `package.json`、lint/typecheck 脚本或 build 步骤。不要把这些缺失的命令记录为通过。可运行 `node --check script.js` 检查 JavaScript 语法，并解析 HTML、JSON-LD、XML 和配置文件，核对本地资源、内部锚点与规范 URL；部署产物即源 HTML/CSS/JS 和静态资源，无需构建。
+
+上线后复查 `/`、`/robots.txt`、`/sitemap.xml` 的响应、主域跳转和 CDN 标头。搜索引擎收录、Core Web Vitals 与 AI 搜索引用需要另外测量，不能由静态验证推断。
 
 ## 设计与实施文档
 

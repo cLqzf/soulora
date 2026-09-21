@@ -1074,6 +1074,8 @@ setupViewportAdaptation();
 setupHeroVideo();
 setupHeroAtmosphere();
 setupReveal();
+// Keep the readable fallback until reveal initialization has succeeded.
+document.documentElement.classList.remove("no-js");
 setupHeader();
 setupAnchorNavigation();
 setupSectionProgress();
