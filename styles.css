@@ -1751,7 +1751,7 @@ html, body { background: #020203; }
 
 /* Mobile first-screen fit and embedded-browser video resilience. */
 .hero-video-background .hero-media {
-  background: #020203 url("assets/hero/soulora-hero-background-poster.png") center center / cover no-repeat;
+  background: #020203 url("assets/hero/soulora-hero-background-poster.webp?v=20260922-hero-v1") center center / cover no-repeat;
 }
 
 @media (max-width: 720px) {

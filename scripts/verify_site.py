@@ -2,6 +2,7 @@
 
 import json
 from collections import Counter
+from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlsplit
@@ -57,7 +58,10 @@ def source_for(route):
 def check():
     sitemap = ET.parse(ROOT / "sitemap.xml")
     urls = [node.text for node in sitemap.findall("s:url/s:loc", NS)]
+    lastmods = [node.text for node in sitemap.findall("s:url/s:lastmod", NS)]
     require(bool(urls) and len(urls) == len(set(urls)), "Empty or duplicate sitemap URLs")
+    require(len(lastmods) == len(urls), "Every sitemap URL must have a lastmod")
+    require(all(date.fromisoformat(value) <= date.today() for value in lastmods), "Invalid or future sitemap lastmod")
     pages = {}
     for url in urls:
         parsed = urlsplit(url)
@@ -114,6 +118,8 @@ def check():
         require(len(entity_ids) == len(set(entity_ids)), prefix + ": duplicate schema IDs")
         require(web_page.get("isPartOf", {}).get("@id") in entity_ids, prefix + ": broken website reference")
         if prefix != "/":
+            visible_updates = [attrs.get("datetime") for tag, attrs in tags if tag == "time" and attrs.get("datetime")]
+            require(len(visible_updates) == 1 and web_page.get("dateModified") == visible_updates[0], prefix + ": dateModified mismatch")
             crumbs = [node for node in nodes if node.get("@type") == "BreadcrumbList"]
             require(len(crumbs) == 1 and web_page.get("breadcrumb", {}).get("@id") == crumbs[0]["@id"], prefix + ": breadcrumb reference")
             items = crumbs[0]["itemListElement"]
@@ -157,9 +163,21 @@ def check():
     require("User-agent: *" in robots and "Allow: /" in robots, "Unexpected public crawl policy")
     config = json.loads((ROOT / "vercel.json").read_text())
     require(config.get("cleanUrls") is True and config.get("trailingSlash") is False, "Clean URL config changed")
+    cache_headers = {
+        item["source"]: next((header["value"] for header in item.get("headers", []) if header["key"].lower() == "cache-control"), "")
+        for item in config.get("headers", [])
+    }
+    for source in {"/styles.css", "/content.css", "/script.js", "/assets/hero/(.*)"}:
+        value = cache_headers.get(source, "").lower()
+        require("max-age=31536000" in value and "immutable" in value, "Missing immutable cache policy for " + source)
+    homepage_source = (ROOT / "index.html").read_text()
+    stylesheet_source = (ROOT / "styles.css").read_text()
+    require("soulora-hero-background-poster.png" not in homepage_source + stylesheet_source, "Legacy PNG hero poster is still referenced")
+    require(homepage_source.count("soulora-hero-background-poster.webp?v=20260922-hero-v1") == 2, "Poster preload and video URL must match")
     print(f"PASS: {len(pages)} pages, unique metadata, canonical, JSON-LD, breadcrumbs, robots and sitemap")
     print(f"PASS: {link_count} internal links and their fragments; no orphan pages; local asset references")
     print("PASS: 404 has noindex, valid recovery links, and is excluded from the sitemap")
+    print("PASS: sitemap lastmod, visible update dates, versioned hero assets and immutable cache headers")
 
 
 if __name__ == "__main__":
