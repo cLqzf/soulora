@@ -71,7 +71,7 @@ def check():
         pages[url] = Page(source_for(parsed.path).read_text())
 
     published_files = {source_for(urlsplit(url).path).resolve() for url in urls}
-    html_files = {path.resolve() for path in ROOT.rglob("*.html") if not any(part.startswith(".") or part in {"node_modules", "dist"} for part in path.relative_to(ROOT).parts)}
+    html_files = {path.resolve() for path in ROOT.rglob("*.html") if not any(part.startswith(".") or part in {"node_modules", "dist", "dashboard"} for part in path.relative_to(ROOT).parts)}
     error_file = ROOT / "404.html"
     require(html_files == published_files | {error_file.resolve()}, "An HTML page is missing from the sitemap or publication policy")
     error_page = Page(error_file.read_text())
@@ -175,16 +175,16 @@ def check():
     script_source = (ROOT / "script.js").read_text()
     require("soulora-hero-background-poster.png" not in homepage_source + stylesheet_source, "Legacy PNG hero poster is still referenced")
     require(homepage_source.count("soulora-hero-background-poster.webp?v=20260922-hero-v1") == 2, "Poster preload and video URL must match")
-    require('data-endpoint=""' in homepage_source, "Preview form must not submit before a real endpoint and policy are approved")
+    require('data-endpoint=""' in homepage_source and 'fetch("/api/feedback"' in script_source, "Form must remain a preview until the secure endpoint reports ready")
     require(not any(marker in homepage_source + script_source for marker in {"googletagmanager.com", "google-analytics.com", "@vercel/speed-insights", "va.vercel-scripts.com"}), "Unreviewed analytics or Speed Insights integration")
     for route in {"/privacy", "/terms", "/data-requests"}:
         require(ORIGIN + route in pages, "Missing trust page " + route)
-        require("support@soulora.com" in source_for(route).read_text(), route + ": missing support contact")
+        require("support@soulora.ai" in source_for(route).read_text(), route + ": missing support contact")
     print(f"PASS: {len(pages)} pages, unique metadata, canonical, JSON-LD, breadcrumbs, robots and sitemap")
     print(f"PASS: {link_count} internal links and their fragments; no orphan pages; local asset references")
     print("PASS: 404 has noindex, valid recovery links, and is excluded from the sitemap")
     print("PASS: sitemap lastmod, visible update dates, versioned hero assets and immutable cache headers")
-    print("PASS: published trust pages, support contact, inactive form endpoint and no unreviewed measurement script")
+    print("PASS: published trust pages, support contact, availability-gated form and no unreviewed measurement script")
 
 
 if __name__ == "__main__":

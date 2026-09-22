@@ -2,7 +2,7 @@
 
 Soulora 是一个以倾听、许可式记忆和清晰边界为核心的 AI 虚拟伴侣产品概念官网。
 
-当前仓库交付的是商业级静态产品预览，不包含真实 AI 服务、用户账号、长期记忆、音频播放或邮件收集后端。页面会明确标识这些边界，不使用虚构下载入口、用户数字或安全认证。
+当前仓库交付的是产品预览和可选的预发布调研收集能力，不包含真实 AI 服务、产品账号、长期记忆或音频播放。未配置并显式开启 Supabase 时，表单仍是本地预览；页面不会假装已保存反馈。
 
 ## 体验内容
 
@@ -28,15 +28,22 @@ python3 -m http.server 4173
 
 ## 部署
 
-项目没有构建步骤或运行时依赖，可直接导入 Vercel 部署。根目录 `404.html` 用作 Vercel 静态站错误页；保持真实 404 响应，不添加指向首页的通配重写。错误页带有 `noindex`，不加入站点地图。
+官网没有构建步骤或运行时依赖，可直接导入 Vercel 部署。`api/feedback.js` 是零依赖 Vercel Function；`.vercelignore` 排除独立后台与迁移文件。根目录 `404.html` 用作 Vercel 静态站错误页；保持真实 404 响应，不添加指向首页的通配重写。错误页带有 `noindex`，不加入站点地图。
+
+## 调研收集与管理后台
+
+表单只收集场景（最多两项）、期望（可选，最多 320 字）、首选平台、邮箱及独立的访谈许可。聊天演示、记忆输入、声音等内容不会发送。服务端校验、去重、简单蜜罐与 Supabase RLS 已实现；只有管理员可读和修改处理状态。后台位于 `dashboard/`，作为独立静态项目部署，不需要把高权限密钥发给浏览器。完整启用步骤和限制见 [`docs/research-backend-setup.md`](docs/research-backend-setup.md)。
+
+飞书邮箱域名已验证，`support@soulora.ai` 已由项目所有者确认创建并通过外部收件测试。DNS 与后续 DKIM/DMARC 检查见 [`docs/support-mail-setup.md`](docs/support-mail-setup.md)。官网公开客服及隐私请求地址已统一为 `support@soulora.ai`。
 
 ## 上线前配置
 
-1. 为 `#access-form` 的 `data-endpoint` 配置真实、受保护的申请接口。接口接收 `email`、`moments`、`feedback`、`platform`、`researchOptIn`、`source` 与 `submittedAt` JSON 字段。
-2. 补充真实的运营主体、注册地区和地址；当前公开客服邮箱为 `support@soulora.com`，正式域名已统一为 `https://soulora.ai/`。
-3. 在上线真实产品前，由实际运营地区的合格法律顾问审核并完善隐私政策、服务条款、数据保留、导出与删除说明。当前页面只覆盖开发中概念网站的可验证行为。
-4. 对真实产品的记忆、加密、危机响应和模型供应商进行合规与安全验证。
-5. 在有证据后再添加用户规模、商店下载、合作品牌或认证信息。
+1. 在新加坡 `ap-southeast-1` 创建 Soulora 专用 Supabase 项目、应用 SQL 迁移、配置 Vercel 环境变量并审核隐私与保留期，再显式启用 `FEEDBACK_COLLECTION_ENABLED=true`。站点会先检查服务可用性，没准备好时保持本地预览。
+2. 邮箱域名验证和 `support@soulora.ai` 收件测试已完成；发信后继续核对 DKIM/DMARC 对齐和实际投递结果。
+3. 补充真实的运营主体、注册地区、地址、Supabase 地区和数据保留期。正式域名为 `https://soulora.ai/`。
+4. 在上线真实产品前，由实际运营地区的合格法律顾问审核并完善隐私政策、服务条款、数据保留、导出与删除说明。当前页面只覆盖开发中概念网站的可验证行为。
+5. 对真实产品的记忆、加密、危机响应和模型供应商进行合规与安全验证。
+6. 在有证据后再添加用户规模、商店下载、合作品牌或认证信息。
 
 ## SEO 配置与验证
 
@@ -47,7 +54,7 @@ python3 -m http.server 4173
 - 未添加软件评分、下载地址、运营主体 schema 或定价，因为当前没有对应的真实产品信息。
 - 外部脚本成功初始化内容显现后才移除 `no-js`，脚本加载失败时保留可阅读正文。
 
-项目为零依赖静态站，没有 `package.json`、lint/typecheck 脚本或 build 步骤。不要把这些缺失的命令记录为通过。可运行 `node --check script.js` 检查 JavaScript 语法，并解析 HTML、JSON-LD、XML 和配置文件，核对本地资源、内部锚点与规范 URL；部署产物即源 HTML/CSS/JS 和静态资源，无需构建。
+项目没有 `package.json`、lint/typecheck 脚本或 build 步骤。不要把这些缺失的命令记录为通过。可运行 `node --test tests/feedback.test.js`、`node --check script.js`、`node --check dashboard/app.js` 与 `python3 scripts/verify_site.py`；线上 Supabase 与邮件收发仍需另行验证。
 
 上线后复查 `/`、`/robots.txt`、`/sitemap.xml` 的响应、主域跳转和 CDN 标头。搜索引擎收录、Core Web Vitals 与 AI 搜索引用需要另外测量，不能由静态验证推断。
 
@@ -61,7 +68,7 @@ python3 -m http.server 4173
 - `content.css` 复用现有设计变量；新页面只用原生 HTML/CSS，不加载主页业务脚本。每页都有独立 metadata、canonical、WebPage/WebSite 和 BreadcrumbList。
 - 新页面通过 Vercel 原生 `cleanUrls` 使用不带 `.html`、不带尾斜杠的路径。Python 简单文件服务器预览时，直接访问 `/how-it-works.html` 和 `/guides/choose-ai-companion.html`；它不会自动模拟 Vercel 的无扩展名路由。
 - 首页和新页面互相链接。当前仍只有英文；新加坡网站内容也使用英文，不加入指向不存在翻译页的 hreflang。产品语言能力、地区政策和下载渠道准备好后，再创建相应页面。
-- 发布真实服务或收集接口时，同步更新首页产品状态、反馈介绍、使用流程中的可用性表格与 FAQ、选择指南的 Soulora 状态，以及对应 metadata。不能只启用接口而留下旧的预览说明。
+- 发布真实产品服务时，同步更新首页产品状态、使用流程中的可用性表格与 FAQ、选择指南的 Soulora 状态及对应 metadata。调研收集不同于产品账号或正式等候名单。
 - CSS、JavaScript 和首屏媒体使用带版本的 URL，并由 Vercel 返回一年 `immutable` 浏览器缓存。修改这些文件时必须同时更换对应 HTML/CSS 中的版本参数，避免用户继续使用旧资源。
 - 站点地图的 `lastmod` 表示可见正文的实际更新时间，不使用构建或部署时间自动覆盖。
 

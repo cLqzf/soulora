@@ -898,9 +898,25 @@ function setupAccessForm() {
   const resultTitle = result?.querySelector("[data-result-title]");
   const resultMessage = result?.querySelector("[data-result-message]");
   const privacyNote = panel?.querySelector(".feedback-privacy span");
+  const consent = form?.querySelector("input[name='consent']");
+  const consentError = document.querySelector("#consent-error");
   if (!form || !input || !error || !result || !field || !submit || steps.length !== 2 || !next || !previous || !panel) return;
 
   let currentStep = 0;
+  // The static site stays a local preview unless the server confirms storage is ready.
+  fetch("/api/feedback", { cache: "no-store" }).then(async (response) => {
+    if (!response.ok) return;
+    const status = await response.json();
+    if (!status.available) return;
+    form.dataset.endpoint = "/api/feedback";
+    if (privacyNote) privacyNote.textContent = "Responses are securely stored for pre-launch research. Research invitations require your optional opt-in; no marketing emails are sent from this form.";
+    const label = submit.querySelector("span");
+    if (label) label.textContent = "Share my response";
+    const heading = panel.querySelector(".feedback-panel-head small");
+    if (heading) heading.textContent = "PRE-LAUNCH RESEARCH";
+  }).catch(() => {}).finally(() => {
+    if (!form.dataset.endpoint && privacyNote) privacyNote.textContent = "Transparent preview: collection is not available. Your answers stay in this browser page and are not saved.";
+  });
 
   const clearResult = () => {
     result.hidden = true;
@@ -960,6 +976,14 @@ function setupAccessForm() {
     return !message;
   };
 
+  const validateConsent = () => {
+    const valid = Boolean(consent?.checked);
+    if (consentError) consentError.textContent = valid ? "" : "Please read and confirm how your response will be used.";
+    consent?.setAttribute("aria-invalid", String(!valid));
+    return valid;
+  };
+  consent?.addEventListener("change", validateConsent);
+
   momentInputs.forEach((momentInput) => {
     momentInput.addEventListener("change", () => {
       if (selectedMoments().length > 2) {
@@ -1015,6 +1039,11 @@ function setupAccessForm() {
       input.focus();
       return;
     }
+    if (!validateConsent()) {
+      setStep(1, false);
+      consent?.focus();
+      return;
+    }
 
     const endpoint = form.dataset.endpoint?.trim();
     const label = submit.querySelector("span");
@@ -1025,6 +1054,8 @@ function setupAccessForm() {
       feedback: String(formData.get("feedback_note") || "").trim(),
       platform: String(formData.get("platform") || ""),
       researchOptIn: formData.get("research_opt_in") === "on",
+      consent: formData.get("consent") === "on",
+      website: String(formData.get("website") || ""),
       source: "soulora-early-access",
       submittedAt: new Date().toISOString()
     };
@@ -1048,7 +1079,7 @@ function setupAccessForm() {
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error("Request failed");
-      showResult("success", "Thank you—we heard you.", "Your perspective has been shared. We'll only use your email for the research and early-access choices you made.");
+      showResult("success", "Thank you—we heard you.", "Your perspective has been saved for pre-launch research. We'll only contact you about an interview if you opted in.");
       form.reset();
       field.classList.remove("is-valid");
       if (count) count.textContent = `0 / ${note?.maxLength || 320}`;
@@ -1065,9 +1096,6 @@ function setupAccessForm() {
     }
   });
 
-  if (form.dataset.endpoint?.trim() && privacyNote) {
-    privacyNote.textContent = "Your response is sent only to the configured research endpoint. Publish the final privacy and deletion policy before launch.";
-  }
   setStep(0, false);
 }
 

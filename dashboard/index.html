@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Soulora · Research console</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header><div><span class="eyebrow">SOULORA / PRIVATE</span><h1>Research console</h1><p>Pre-launch feedback, in one quiet place.</p></div><button id="sign-out" hidden>Sign out</button></header>
+    <section id="login-panel" class="card login">
+      <h2>Administrator sign in</h2><p>Only accounts explicitly added to the admin list can see responses.</p>
+      <form id="login-form"><label>Email<input type="email" name="email" autocomplete="username" required /></label><label>Password<input type="password" name="password" autocomplete="current-password" required /></label><button type="submit">Sign in</button></form>
+    </section>
+    <section id="console" hidden>
+      <div class="metrics" id="metrics"></div>
+      <div class="toolbar"><label>Filter status <select id="status-filter"><option value="">All responses</option><option value="new">New</option><option value="reviewed">Reviewed</option><option value="contacted">Contacted</option></select></label><button id="refresh">Refresh</button><button id="export">Export displayed CSV</button></div>
+      <div id="responses" class="responses"></div><div class="pagination"><button id="previous" disabled>Previous</button><span id="page-label"></span><button id="next" disabled>Next</button></div>
+      <p class="hint">Research opt-in permits interview invitations only. This form does not grant marketing permission. Verify identity before handling an access or deletion request.</p>
+    </section>
+    <p id="message" role="status" aria-live="polite"></p>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

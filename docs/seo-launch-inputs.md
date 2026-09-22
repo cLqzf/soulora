@@ -6,7 +6,7 @@ This is the minimum factual input required before the remaining launch, trust, c
 
 - Product status: in development. The public website remains a concept preview with no live account, AI chat, download, active waitlist, or payment flow.
 - Singapore website language: English. This is a website-market decision and does not establish future text-chat, speech-recognition, or generated-voice support.
-- Public support email: `support@soulora.com`.
+- Public support email: `support@soulora.ai`.
 - Public operator/legal name, registered address, jurisdiction, policy owner, and legal reviewer: not yet available.
 - Product screenshots and recordings approved for public use: not yet available beyond the existing concept-site media.
 - Search Console: the available browser account can open `sc-domain:faceenjoy.com`. That property is not evidence of access to, ownership of, or data for `sc-domain:soulora.ai`.
@@ -35,7 +35,7 @@ This is the minimum factual input required before the remaining launch, trust, c
 
 - Public operator/legal name and jurisdiction.
 - Public brand name if different from the legal name.
-- Public contact email is `support@soulora.com`; add the business address and support URL when available.
+- Public contact email is `support@soulora.ai`; add the business address and support URL when available.
 - Privacy-policy owner or legal reviewer, effective date, data categories, purposes, processors, retention, training choices, user rights, and deletion/contact process.
 - Terms owner or legal reviewer, effective date, eligibility/age rules, acceptable use, billing/cancellation terms, liability language, and governing law.
 - Approved social/profile URLs that genuinely represent Soulora.

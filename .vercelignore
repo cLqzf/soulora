@@ -1,0 +1,7 @@
+dashboard/
+supabase/
+docs/
+scripts/
+tests/
+.env
+.env.*

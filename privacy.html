@@ -73,7 +73,7 @@
       <header class="reading-hero">
         <p class="reading-eyebrow">Website privacy</p>
         <h1>Privacy notice for the Soulora website.</h1>
-        <p class="reading-lead">This notice describes the current concept website at soulora.ai. Soulora is still in development and does not yet provide accounts, AI chat, downloads, or a live waitlist.</p>
+        <p class="reading-lead">This notice describes the pre-launch concept website at soulora.ai. Soulora does not yet provide accounts, AI chat, downloads, or a live waitlist. Its research form accepts responses only when secure collection is available.</p>
         <p class="reading-date">Effective and updated <time datetime="2026-09-22">22 September 2026</time></p>
       </header>
       <aside class="reading-status" aria-label="Policy status"><strong>Interim website notice</strong><p>The public legal operator, jurisdiction, and product-specific data practices have not been finalized. This notice records the website's current, limited behavior and must be replaced or expanded before a live service collects product data.</p></aside>
@@ -82,7 +82,7 @@
         <div class="reading-body">
           <section class="reading-section" id="scope" aria-labelledby="scope-title">
             <h2 id="scope-title">What this notice covers</h2>
-            <p>This notice covers visits to the public Soulora website and messages voluntarily sent to <a href="mailto:support@soulora.com">support@soulora.com</a>. It does not describe an unreleased Soulora app or AI companion service.</p>
+            <p>This notice covers visits to the public Soulora website and messages voluntarily sent to <a href="mailto:support@soulora.ai">support@soulora.ai</a>. It does not describe an unreleased Soulora app or AI companion service.</p>
             <p>The website is an English-language concept preview. English is also the intended website language for Singapore at this stage. That does not mean the future product already supports English voice or chat in any particular market.</p>
           </section>
           <section class="reading-section" id="data" aria-labelledby="data-title">
@@ -92,7 +92,9 @@
             <h3>Messages you send</h3>
             <p>If you email support, the message, sender address, attachments, and related correspondence are processed so the request can be answered. Do not send passwords, government identifiers, medical records, financial information, or other sensitive material.</p>
             <h3>Local preview choices</h3>
-            <p>The scripted conversation, avatar selector, memory example, breathing timer, and feedback-flow preview run in the current browser page. The published site does not use cookies, local storage, session storage, or an active form endpoint to retain those choices.</p>
+            <p>The scripted conversation, avatar selector, memory example, and breathing timer run only in the current browser page. The feedback form checks whether secure collection is available. If it is unavailable, form entries remain a local preview and are not sent or saved. The public site does not use cookies, local storage, or session storage for these interactions.</p>
+            <h3>Pre-launch research, when enabled</h3>
+            <p>If the form says “Share my response” and you submit it, we store your email address, up to two selected use cases, an optional note, preferred platform, interview opt-in, consent version, source, submission time, and internal review status in Supabase. The website does not send example chat, memory, voice, or avatar choices to this database. Do not put sensitive health or financial details in the note.</p>
           </section>
           <section class="reading-section" id="not-collected" aria-labelledby="not-collected-title">
             <h2 id="not-collected-title">What the site does not collect today</h2>
@@ -100,35 +102,36 @@
               <li>No Soulora user account or profile exists on this website.</li>
               <li>The conversation examples are scripted and are not sent to an AI model.</li>
               <li>The visual voice preview does not access the microphone or upload audio.</li>
-              <li>The feedback preview has no configured submission endpoint; entries are not sent or saved by Soulora.</li>
+              <li>If secure collection is unavailable, the feedback form is a local preview and entries are not saved.</li>
               <li>No advertising, analytics, or Vercel Speed Insights script is currently installed in the published source.</li>
             </ul>
           </section>
           <section class="reading-section" id="use" aria-labelledby="use-title">
             <h2 id="use-title">Why current website data may be used</h2>
-            <p>Technical request data may be used to deliver the site, maintain reliability, investigate errors, prevent abuse, and protect the site. Support correspondence is used to answer the request, keep necessary records of the conversation, and address related security or legal obligations.</p>
+            <p>Technical request data may be used to deliver the site, maintain reliability, investigate errors, prevent abuse, and protect the site. Support correspondence is used to answer the request, keep necessary records of the conversation, and address related security or legal obligations. When enabled, research responses help prioritize the product and manage requests; interview invitations are sent only to those who separately opt in. Submitting does not subscribe you to marketing or reserve access.</p>
             <p>The current website does not use visitor information for personalized advertising or AI model training. If measurement tools or a live product are introduced, this notice will be updated before those practices begin.</p>
           </section>
           <section class="reading-section" id="providers" aria-labelledby="providers-title">
             <h2 id="providers-title">Hosting and service providers</h2>
             <p>The website is hosted and delivered through Vercel. Vercel may process technical request data as a hosting, content-delivery, and security provider under its own infrastructure and policies. You can review <a href="https://vercel.com/legal/privacy-policy">Vercel's privacy policy</a> for information about its practices.</p>
-            <p>The provider for <a href="mailto:support@soulora.com">support@soulora.com</a> and its retention settings have not been documented publicly yet. This information remains a launch requirement.</p>
+            <p>When research collection is enabled, Supabase hosts the response database. Only authorized administrators can view responses; the public form sends them through a server-side endpoint. Data may be processed in the region selected for the Supabase project. The operator must confirm that region and any cross-border requirements before enabling collection.</p>
+            <p><a href="mailto:support@soulora.ai">support@soulora.ai</a> is hosted with Lark Mail. The mailbox's precise retention settings have not been documented publicly yet and remain a launch requirement.</p>
           </section>
           <section class="reading-section" id="retention" aria-labelledby="retention-title">
             <h2 id="retention-title">Retention, access, deletion, and export</h2>
-            <p>The site source does not create Soulora accounts or store preview entries. Hosting logs and support email records may exist outside the site source. Their precise retention periods have not yet been published.</p>
+            <p>The site does not create Soulora product accounts or retain local preview choices. If the research form is enabled, responses remain in the restricted database until the operator processes a deletion request or applies a documented retention schedule. Hosting logs and support email records may exist outside the site source. The operator must publish a concrete retention period before activating research collection.</p>
             <p>You may request access to, correction of, or deletion of information associated with your support email. Where applicable, you may also request a portable copy or object to processing. Requests are handled subject to identity verification, technical availability, and applicable legal requirements.</p>
             <p>Follow the steps on the <a href="/data-requests">data requests page</a>. Because the public operator and jurisdiction are still pending, jurisdiction-specific rights and response periods will be added before product launch.</p>
           </section>
           <section class="reading-section" id="changes" aria-labelledby="changes-title">
             <h2 id="changes-title">Changes and contact</h2>
             <p>This notice will change when analytics, registration, downloads, AI chat, memory, voice, payments, or other product functions are introduced. The effective date above will be updated when the text or practices materially change.</p>
-            <p>Privacy questions can be sent to <a href="mailto:support@soulora.com">support@soulora.com</a>. The public legal entity, address, jurisdiction, privacy owner, and independent legal reviewer are not yet available and are recorded as unresolved launch items.</p>
+            <p>Privacy questions can be sent to <a href="mailto:support@soulora.ai">support@soulora.ai</a>. The public legal entity, address, jurisdiction, privacy owner, and independent legal reviewer are not yet available and are recorded as unresolved launch items.</p>
           </section>
         </div>
       </div>
       <aside class="reading-next" aria-labelledby="next-title"><div><h2 id="next-title">Need to make a data request?</h2><p>The current site has no account data, but you can ask about support correspondence or technical records associated with you.</p></div><a class="button button-primary" href="/data-requests">View the process <span aria-hidden="true">↗</span></a></aside>
     </main>
-    <footer class="reading-footer"><div class="reading-footer-inner"><p>© 2026 Soulora<br />Product in development.</p><nav class="reading-links" aria-label="Footer navigation"><a href="/">Soulora home</a><a href="/privacy" aria-current="page">Privacy</a><a href="/terms">Terms</a><a href="/data-requests">Data requests</a><a href="mailto:support@soulora.com">Support</a></nav></div></footer>
+    <footer class="reading-footer"><div class="reading-footer-inner"><p>© 2026 Soulora<br />Product in development.</p><nav class="reading-links" aria-label="Footer navigation"><a href="/">Soulora home</a><a href="/privacy" aria-current="page">Privacy</a><a href="/terms">Terms</a><a href="/data-requests">Data requests</a><a href="mailto:support@soulora.ai">Support</a></nav></div></footer>
   </body>
 </html>
