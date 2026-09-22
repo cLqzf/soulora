@@ -172,12 +172,19 @@ def check():
         require("max-age=31536000" in value and "immutable" in value, "Missing immutable cache policy for " + source)
     homepage_source = (ROOT / "index.html").read_text()
     stylesheet_source = (ROOT / "styles.css").read_text()
+    script_source = (ROOT / "script.js").read_text()
     require("soulora-hero-background-poster.png" not in homepage_source + stylesheet_source, "Legacy PNG hero poster is still referenced")
     require(homepage_source.count("soulora-hero-background-poster.webp?v=20260922-hero-v1") == 2, "Poster preload and video URL must match")
+    require('data-endpoint=""' in homepage_source, "Preview form must not submit before a real endpoint and policy are approved")
+    require(not any(marker in homepage_source + script_source for marker in {"googletagmanager.com", "google-analytics.com", "@vercel/speed-insights", "va.vercel-scripts.com"}), "Unreviewed analytics or Speed Insights integration")
+    for route in {"/privacy", "/terms", "/data-requests"}:
+        require(ORIGIN + route in pages, "Missing trust page " + route)
+        require("support@soulora.com" in source_for(route).read_text(), route + ": missing support contact")
     print(f"PASS: {len(pages)} pages, unique metadata, canonical, JSON-LD, breadcrumbs, robots and sitemap")
     print(f"PASS: {link_count} internal links and their fragments; no orphan pages; local asset references")
     print("PASS: 404 has noindex, valid recovery links, and is excluded from the sitemap")
     print("PASS: sitemap lastmod, visible update dates, versioned hero assets and immutable cache headers")
+    print("PASS: published trust pages, support contact, inactive form endpoint and no unreviewed measurement script")
 
 
 if __name__ == "__main__":

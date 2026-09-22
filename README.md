@@ -33,15 +33,15 @@ python3 -m http.server 4173
 ## 上线前配置
 
 1. 为 `#access-form` 的 `data-endpoint` 配置真实、受保护的申请接口。接口接收 `email`、`moments`、`feedback`、`platform`、`researchOptIn`、`source` 与 `submittedAt` JSON 字段。
-2. 补充真实的运营主体和联系信息；正式域名已统一为 `https://soulora.ai/`。
-3. 发布完整的隐私政策、服务条款、数据保留与删除说明。
+2. 补充真实的运营主体、注册地区和地址；当前公开客服邮箱为 `support@soulora.com`，正式域名已统一为 `https://soulora.ai/`。
+3. 在上线真实产品前，由实际运营地区的合格法律顾问审核并完善隐私政策、服务条款、数据保留、导出与删除说明。当前页面只覆盖开发中概念网站的可验证行为。
 4. 对真实产品的记忆、加密、危机响应和模型供应商进行合规与安全验证。
 5. 在有证据后再添加用户规模、商店下载、合作品牌或认证信息。
 
 ## SEO 配置与验证
 
 - 首页使用原生 HTML metadata、自引用 canonical、绝对地址的 Open Graph/Twitter 分享图，以及与概念预览状态一致的 `WebSite` / `WebPage` JSON-LD。
-- `robots.txt` 允许公开页面抓取并声明 `sitemap.xml`；站点地图包含首页、使用流程和选择指南，不包含页内锚点、追踪参数或尚未存在的语言页面。
+- `robots.txt` 允许公开页面抓取并声明 `sitemap.xml`；站点地图包含首页、使用流程、选择指南和三份当前网站信任页面，不包含页内锚点、追踪参数或尚未存在的语言页面。
 - `vercel.json` 声明 `www.soulora.ai` 到非 www 域名的永久跳转。部署后需确认 Vercel 域名层配置没有优先返回原有的 307 临时跳转。
 - 新增真实可索引页面时，同步维护唯一 metadata、自引用 canonical、站点地图和内部链接；只有发布完整语言版本后才配置对应 hreflang。
 - 未添加软件评分、下载地址、运营主体 schema 或定价，因为当前没有对应的真实产品信息。
@@ -55,9 +55,12 @@ python3 -m http.server 4173
 
 - `/how-it-works`（`how-it-works.html`）：介绍当前可尝试的演示、许可式记忆设计、语音/形象概念，以及平台、语言和产品状态。
 - `/guides/choose-ai-companion`（`guides/choose-ai-companion.html`）：按会话用途、记忆控制、语音/语言、数据处理、平台和费用提供选择清单。不是产品排名或未实测的竞品比较。
+- `/privacy`（`privacy.html`）：记录开发中概念网站当前处理的技术请求信息、客服邮件、Vercel 托管和未启用的跟踪能力，并明确列出待补法律信息。
+- `/terms`（`terms.html`）：仅覆盖当前信息展示与本地交互预览，不把尚未上线的产品、账号、付费或能力写成已提供服务。
+- `/data-requests`（`data-requests.html`）：提供当前客服邮件与技术记录的访问、导出、更正和删除申请步骤，并标明真实产品上线前仍需实现的账号与内容控制。
 - `content.css` 复用现有设计变量；新页面只用原生 HTML/CSS，不加载主页业务脚本。每页都有独立 metadata、canonical、WebPage/WebSite 和 BreadcrumbList。
 - 新页面通过 Vercel 原生 `cleanUrls` 使用不带 `.html`、不带尾斜杠的路径。Python 简单文件服务器预览时，直接访问 `/how-it-works.html` 和 `/guides/choose-ai-companion.html`；它不会自动模拟 Vercel 的无扩展名路由。
-- 首页和新页面互相链接。当前仍只有英文，不加入指向不存在翻译页的 hreflang。产品能力、政策和下载渠道准备好后，再创建相应页面。
+- 首页和新页面互相链接。当前仍只有英文；新加坡网站内容也使用英文，不加入指向不存在翻译页的 hreflang。产品语言能力、地区政策和下载渠道准备好后，再创建相应页面。
 - 发布真实服务或收集接口时，同步更新首页产品状态、反馈介绍、使用流程中的可用性表格与 FAQ、选择指南的 Soulora 状态，以及对应 metadata。不能只启用接口而留下旧的预览说明。
 - CSS、JavaScript 和首屏媒体使用带版本的 URL，并由 Vercel 返回一年 `immutable` 浏览器缓存。修改这些文件时必须同时更换对应 HTML/CSS 中的版本参数，避免用户继续使用旧资源。
 - 站点地图的 `lastmod` 表示可见正文的实际更新时间，不使用构建或部署时间自动覆盖。
