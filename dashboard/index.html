@@ -14,6 +14,15 @@
       <h2>Administrator sign in</h2><p>Only accounts explicitly added to the admin list can see responses.</p>
       <form id="login-form"><label>Email<input type="email" name="email" autocomplete="username" required /></label><label>Password<input type="password" name="password" autocomplete="current-password" required /></label><button type="submit">Sign in</button></form>
     </section>
+    <section id="recovery-panel" class="card login" hidden>
+      <h2>Set a new password</h2><p>Choose a new password for your administrator account.</p>
+      <form id="recovery-form">
+        <label>New password<input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
+        <label>Confirm new password<input type="password" name="confirmation" autocomplete="new-password" minlength="8" required /></label>
+        <button type="submit">Update password</button>
+      </form>
+      <button id="cancel-recovery" class="secondary" type="button">Back to sign in</button>
+    </section>
     <section id="console" hidden>
       <div class="metrics" id="metrics"></div>
       <div class="toolbar"><label>Filter status <select id="status-filter"><option value="">All responses</option><option value="new">New</option><option value="reviewed">Reviewed</option><option value="contacted">Contacted</option></select></label><button id="refresh">Refresh</button><button id="export">Export displayed CSV</button></div>

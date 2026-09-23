@@ -3,6 +3,7 @@ let base = "";
 let supabaseAnonKey = "";
 const pageSize = 50;
 let token = "";
+let recoveryToken = "";
 let page = 0;
 let rows = [];
 let total = 0;
@@ -23,11 +24,43 @@ async function request(path, options = {}) {
 
 function signOut() {
   token = "";
+  recoveryToken = "";
   rows = [];
   $("#console").hidden = true;
   $("#sign-out").hidden = true;
+  $("#recovery-panel").hidden = true;
   $("#login-panel").hidden = false;
   $("#login-form").reset();
+  $("#recovery-form").reset();
+}
+
+function readAuthRedirect() {
+  const hash = new URLSearchParams(window.location.hash.slice(1));
+  const query = new URLSearchParams(window.location.search);
+  const value = (name) => hash.get(name) || query.get(name);
+  const type = value("type");
+  const accessToken = value("access_token");
+  const error = value("error_description") || value("error");
+
+  if (!type && !accessToken && !error) return false;
+
+  const cleanUrl = new URL(window.location.href);
+  cleanUrl.hash = "";
+  for (const name of ["access_token", "refresh_token", "expires_at", "expires_in", "token_type", "type", "error", "error_code", "error_description"]) {
+    cleanUrl.searchParams.delete(name);
+  }
+  window.history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}`);
+
+  if (type === "recovery" && accessToken) {
+    recoveryToken = accessToken;
+    $("#login-panel").hidden = true;
+    $("#recovery-panel").hidden = false;
+    message("Recovery link verified. Set your new password.");
+    return true;
+  }
+
+  if (error) message(`This recovery link could not be used: ${error}`);
+  return false;
 }
 
 async function load() {
@@ -100,6 +133,33 @@ $("#login-form").addEventListener("submit", async (event) => {
     await load();
   } catch (error) { message(error.message); }
 });
+$("#recovery-form").addEventListener("submit", async (event) => {
+  event.preventDefault(); message("");
+  const data = new FormData(event.currentTarget);
+  const password = String(data.get("password") || "");
+  const confirmation = String(data.get("confirmation") || "");
+  if (password !== confirmation) { message("Passwords do not match."); return; }
+  if (!recoveryToken) { message("This recovery link is missing or has expired. Request a new one."); return; }
+
+  const button = event.currentTarget.querySelector("button");
+  button.disabled = true;
+  try {
+    const response = await fetch(`${base}/auth/v1/user`, {
+      method: "PUT",
+      headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${recoveryToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.msg || body.message || "Password update failed. Request a new recovery link.");
+    }
+    signOut();
+    message("Password updated. You can now sign in with your new password.");
+  } catch (error) { message(error.message); }
+  finally { button.disabled = false; }
+});
+$("#cancel-recovery").addEventListener("click", () => { signOut(); message(""); });
 $("#sign-out").addEventListener("click", signOut);
 $("#status-filter").addEventListener("change", () => { page = 0; load().catch((error) => message(error.message)); });
 $("#refresh").addEventListener("click", () => load().catch((error) => message(error.message)));
@@ -125,6 +185,7 @@ try {
   }
   base = config.supabaseUrl.replace(/\/$/, "");
   supabaseAnonKey = config.supabaseAnonKey;
+  readAuthRedirect();
 } catch {
   $("#login-form").querySelector("button").disabled = true;
   message("Dashboard is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY in its deployment.");

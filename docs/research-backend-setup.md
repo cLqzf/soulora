@@ -12,7 +12,7 @@
 4. 网站 Vercel 项目的 Production/Preview 环境变量配置 `SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY`（服务角色仅在服务器端），重新部署；变量清单可参考根目录 `.env.example`。默认 `FEEDBACK_COLLECTION_ENABLED` 缺失时接口仍禁用。准备好后只在目标环境设 `FEEDBACK_COLLECTION_ENABLED=true` 并重新部署。
 5. `GET https://soulora.ai/api/feedback` 应返回 `{ "available": true }`；现场测试表单提交、管理员查询、无管理员读取被 RLS 拒绝、重复邮箱的统一成功响应、失败时表单保留原值，以及数据请求的查找与删除流程。不要用真实访客信息做测试。
 
-独立后台位于 `dashboard/`。把它作为另一个 Vercel 项目的根目录部署，配置该项目的 `SUPABASE_URL` 和 **`SUPABASE_ANON_KEY`**（这是公开客户端密钥，不是 service_role），`dashboard/api/config.js` 会提供浏览器配置。不要在后台项目里配置 service_role。若本地只用静态服务器预览，可复制 `dashboard/config.example.js` 为 `dashboard/config.js` 并填写公开配置，文件已被 `.gitignore` 排除。独立项目需要 HTTPS，建议加访问控制与 `noindex`。后台 JWT 仅在页面内存中，刷新会退出；不要在公共电脑登录，CSV 导出是敏感个人信息，应存放在受控设备并及时销毁。
+独立后台位于 `dashboard/`。把它作为另一个 Vercel 项目的根目录部署，配置该项目的 `SUPABASE_URL` 和 **`SUPABASE_ANON_KEY`**（这是公开客户端密钥，不是 service_role），`dashboard/api/config.js` 会提供浏览器配置。不要在后台项目里配置 service_role。在 Supabase Authentication 的 URL Configuration 中，把 Site URL 设为后台生产地址，并把同一地址的 `/**` 模式加入 Redirect URLs；否则密码恢复邮件会继续跳转到 localhost。后台能识别 recovery 链接并更新密码，链接过期后应重新发送。若本地只用静态服务器预览，可复制 `dashboard/config.example.js` 为 `dashboard/config.js` 并填写公开配置，文件已被 `.gitignore` 排除。独立项目需要 HTTPS，建议加访问控制与 `noindex`。后台 JWT 仅在页面内存中，刷新会退出；不要在公共电脑登录，CSV 导出是敏感个人信息，应存放在受控设备并及时销毁。
 
 ## 运维与数据请求
 
