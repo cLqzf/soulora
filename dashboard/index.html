@@ -9,27 +9,79 @@
 </head>
 <body>
   <main class="shell">
-    <header><div><span class="eyebrow">SOULORA / PRIVATE</span><h1>Research console</h1><p>Pre-launch feedback, in one quiet place.</p></div><button id="sign-out" hidden>Sign out</button></header>
-    <section id="login-panel" class="card login">
-      <h2>Administrator sign in</h2><p>Only accounts explicitly added to the admin list can see responses.</p>
-      <form id="login-form"><label>Email<input type="email" name="email" autocomplete="username" required /></label><label>Password<input type="password" name="password" autocomplete="current-password" required /></label><button type="submit">Sign in</button></form>
+    <header class="topbar">
+      <div class="brand-lockup">
+        <span class="brand-orbit" aria-hidden="true"><i></i></span>
+        <div><strong>SOULORA</strong><span>Research / private</span></div>
+      </div>
+      <button id="sign-out" class="button button-quiet" hidden>Sign out</button>
+    </header>
+
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <span class="hero-kicker"><i aria-hidden="true"></i> Research operations</span>
+        <h1 id="page-title">Listen closely.<br /><span>Build with signal.</span></h1>
+        <p>Pre-launch feedback, organized for thoughtful decisions.</p>
+      </div>
+      <div class="hero-context" aria-label="Workspace details">
+        <span>Private access</span><span>Singapore region</span><span>Live collection</span>
+      </div>
     </section>
-    <section id="recovery-panel" class="card login" hidden>
-      <h2>Set a new password</h2><p>Choose a new password for your administrator account.</p>
-      <form id="recovery-form">
-        <label>New password<input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
-        <label>Confirm new password<input type="password" name="confirmation" autocomplete="new-password" minlength="8" required /></label>
-        <button type="submit">Update password</button>
-      </form>
-      <button id="cancel-recovery" class="secondary" type="button">Back to sign in</button>
+
+    <section id="login-panel" class="auth-layout">
+      <div class="card login">
+        <span class="section-label">Secure access</span>
+        <h2>Administrator sign in</h2>
+        <p>Only accounts explicitly added to the admin list can view responses.</p>
+        <form id="login-form">
+          <label>Email<input type="email" name="email" autocomplete="username" placeholder="admin@soulora.ai" required /></label>
+          <label>Password<input type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required /></label>
+          <button class="button button-primary" type="submit">Sign in <span aria-hidden="true">→</span></button>
+        </form>
+        <small class="security-note"><i aria-hidden="true"></i> Protected administrator workspace</small>
+      </div>
+      <aside class="auth-aside" aria-label="Research handling principles">
+        <span class="section-label">Designed for care</span>
+        <h2>One quiet place for what people really mean.</h2>
+        <ul>
+          <li><span>01</span>Feedback remains separate from marketing consent.</li>
+          <li><span>02</span>Only explicitly listed administrators can read responses.</li>
+          <li><span>03</span>Exports contain personal data and should stay controlled.</li>
+        </ul>
+      </aside>
     </section>
+
+    <section id="recovery-panel" class="auth-layout recovery-layout" hidden>
+      <div class="card login">
+        <span class="section-label">Account recovery</span>
+        <h2>Set a new password</h2><p>Choose a new password for your administrator account.</p>
+        <form id="recovery-form">
+          <label>New password<input type="password" name="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required /></label>
+          <label>Confirm new password<input type="password" name="confirmation" autocomplete="new-password" minlength="8" placeholder="Repeat your password" required /></label>
+          <button class="button button-primary" type="submit">Update password <span aria-hidden="true">→</span></button>
+        </form>
+        <button id="cancel-recovery" class="button button-text" type="button">← Back to sign in</button>
+      </div>
+    </section>
+
     <section id="console" hidden>
       <div class="metrics" id="metrics"></div>
-      <div class="toolbar"><label>Filter status <select id="status-filter"><option value="">All responses</option><option value="new">New</option><option value="reviewed">Reviewed</option><option value="contacted">Contacted</option></select></label><button id="refresh">Refresh</button><button id="export">Export displayed CSV</button></div>
-      <div id="responses" class="responses"></div><div class="pagination"><button id="previous" disabled>Previous</button><span id="page-label"></span><button id="next" disabled>Next</button></div>
-      <p class="hint">Research opt-in permits interview invitations only. This form does not grant marketing permission. Verify identity before handling an access or deletion request.</p>
+      <section class="workbench" aria-labelledby="responses-title">
+        <div class="workbench-heading">
+          <div><span class="section-label">Inbox</span><h2 id="responses-title">Research responses</h2></div>
+          <div class="toolbar">
+            <label><span>Filter status</span><select id="status-filter"><option value="">All responses</option><option value="new">New</option><option value="reviewed">Reviewed</option><option value="contacted">Contacted</option></select></label>
+            <button id="refresh" class="button button-quiet" type="button">Refresh</button>
+            <button id="export" class="button button-primary" type="button">Export CSV</button>
+          </div>
+        </div>
+        <div class="response-columns" aria-hidden="true"><span>Participant</span><span>Signal</span><span>Review</span></div>
+        <div id="responses" class="responses"></div>
+        <div class="pagination"><button id="previous" class="button button-quiet" disabled>← Previous</button><span id="page-label"></span><button id="next" class="button button-quiet" disabled>Next →</button></div>
+      </section>
+      <p class="hint"><strong>Handle with care.</strong> Research opt-in permits interview invitations only. It does not grant marketing permission. Verify identity before handling an access or deletion request.</p>
     </section>
-    <p id="message" role="status" aria-live="polite"></p>
+    <p id="message" class="toast" role="status" aria-live="polite" hidden></p>
   </main>
   <script type="module" src="./app.js"></script>
 </body>

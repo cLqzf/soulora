@@ -7,7 +7,15 @@ let recoveryToken = "";
 let page = 0;
 let rows = [];
 let total = 0;
-const message = (value) => { $("#message").textContent = value; };
+let messageTimer;
+const message = (value, tone = "error") => {
+  const element = $("#message");
+  clearTimeout(messageTimer);
+  element.textContent = value;
+  element.hidden = !value;
+  element.className = `toast${value ? ` toast-${tone}` : ""}`;
+  if (value && tone !== "error") messageTimer = setTimeout(() => message(""), 4200);
+};
 
 async function request(path, options = {}) {
   const response = await fetch(`${base}${path}`, {
@@ -55,7 +63,7 @@ function readAuthRedirect() {
     recoveryToken = accessToken;
     $("#login-panel").hidden = true;
     $("#recovery-panel").hidden = false;
-    message("Recovery link verified. Set your new password.");
+    message("Recovery link verified. Set your new password.", "info");
     return true;
   }
 
@@ -76,36 +84,47 @@ async function load() {
 function render() {
   const metrics = $("#metrics");
   metrics.replaceChildren();
-  for (const [label, value] of [["Matching responses", total], ["On this page", rows.length], ["Interview opt-ins", rows.filter((row) => row.research_opt_in).length], ["New on this page", rows.filter((row) => row.status === "new").length]]) {
-    const box = document.createElement("div"); box.className = "metric";
+  const metricValues = [["Matching responses", total], ["On this page", rows.length], ["Interview opt-ins", rows.filter((row) => row.research_opt_in).length], ["New on this page", rows.filter((row) => row.status === "new").length]];
+  for (const [index, [label, value]] of metricValues.entries()) {
+    const box = document.createElement("div"); box.className = `metric metric-${index + 1}`;
+    const caption = document.createElement("span"); caption.className = "metric-label"; caption.textContent = label;
     const number = document.createElement("strong"); number.textContent = value;
-    const caption = document.createElement("span"); caption.textContent = label;
-    box.append(number, caption); metrics.append(box);
+    const detail = document.createElement("small"); detail.textContent = index === 0 ? "Current filter" : index === 2 ? "Available to contact" : index === 3 ? "Needs attention" : "Loaded now";
+    box.append(caption, number, detail); metrics.append(box);
   }
   const container = $("#responses"); container.replaceChildren();
-  if (!rows.length) { const empty = document.createElement("p"); empty.textContent = "No responses to show."; container.append(empty); }
+  if (!rows.length) {
+    const empty = document.createElement("div"); empty.className = "empty-state";
+    const mark = document.createElement("span"); mark.setAttribute("aria-hidden", "true"); mark.textContent = "◎";
+    const title = document.createElement("strong"); title.textContent = "No responses to show";
+    const copy = document.createElement("p"); copy.textContent = "Try another status filter or refresh the inbox.";
+    empty.append(mark, title, copy); container.append(empty);
+  }
   for (const row of rows) {
     const card = document.createElement("article"); card.className = "response";
-    const identity = document.createElement("div");
-    const email = document.createElement("strong"); email.textContent = row.email;
-    const date = document.createElement("small"); date.textContent = ` · ${new Date(row.created_at).toLocaleString()}`;
-    const context = document.createElement("p"); context.textContent = `Platform: ${row.platform} · Interview: ${row.research_opt_in ? "Yes" : "No"}`;
-    identity.append(email, date, context);
-    const details = document.createElement("div");
-    const moments = document.createElement("small"); moments.textContent = row.moments.join(" · ");
+    const identity = document.createElement("div"); identity.className = "response-identity";
+    const email = document.createElement("strong"); email.className = "response-email"; email.textContent = row.email;
+    const date = document.createElement("time"); date.dateTime = row.created_at; date.textContent = new Date(row.created_at).toLocaleString();
+    const context = document.createElement("div"); context.className = "response-meta";
+    const platform = document.createElement("span"); platform.className = "pill pill-neutral"; platform.textContent = row.platform;
+    const interview = document.createElement("span"); interview.className = `pill ${row.research_opt_in ? "pill-positive" : "pill-neutral"}`; interview.textContent = row.research_opt_in ? "Interview opt-in" : "No interview opt-in";
+    context.append(platform, interview); identity.append(email, date, context);
+    const details = document.createElement("div"); details.className = "response-signal";
+    const moments = document.createElement("div"); moments.className = "moment-list";
+    for (const moment of Array.isArray(row.moments) ? row.moments : []) { const tag = document.createElement("span"); tag.className = "moment-tag"; tag.textContent = String(moment).replace(/-/g, " "); moments.append(tag); }
     const note = document.createElement("p"); note.className = "note"; note.textContent = row.feedback || "No written comment";
     details.append(moments, note);
-    const control = document.createElement("div");
-    const label = document.createElement("label"); label.textContent = "Review status ";
-    const select = document.createElement("select");
+    const control = document.createElement("div"); control.className = "response-control";
+    const label = document.createElement("label"); label.innerHTML = "<span>Review status</span>";
+    const select = document.createElement("select"); select.className = `status-select status-${row.status}`;
     for (const status of ["new", "reviewed", "contacted"]) { const option = document.createElement("option"); option.value = status; option.textContent = status; select.append(option); }
     select.value = row.status;
     select.addEventListener("change", async () => {
       select.disabled = true;
       try {
         await request(`/rest/v1/feedback_submissions?id=eq.${encodeURIComponent(row.id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: select.value }) });
-        row.status = select.value; message("Status saved.");
-      } catch (error) { select.value = row.status; message(error.message); }
+        row.status = select.value; select.className = `status-select status-${row.status}`; message("Review status saved.", "success");
+      } catch (error) { select.value = row.status; message(error.message, "error"); }
       finally { select.disabled = false; }
     });
     label.append(select); control.append(label); card.append(identity, details, control); container.append(card);
@@ -132,15 +151,15 @@ $("#login-form").addEventListener("submit", async (event) => {
     if (!(await admin.json()).length) { signOut(); throw new Error("This account is not an administrator."); }
     $("#login-panel").hidden = true; $("#console").hidden = false; $("#sign-out").hidden = false;
     await load();
-  } catch (error) { message(error.message); }
+  } catch (error) { message(error.message, "error"); }
 });
 $("#recovery-form").addEventListener("submit", async (event) => {
   event.preventDefault(); message("");
   const data = new FormData(event.currentTarget);
   const password = String(data.get("password") || "");
   const confirmation = String(data.get("confirmation") || "");
-  if (password !== confirmation) { message("Passwords do not match."); return; }
-  if (!recoveryToken) { message("This recovery link is missing or has expired. Request a new one."); return; }
+  if (password !== confirmation) { message("Passwords do not match.", "error"); return; }
+  if (!recoveryToken) { message("This recovery link is missing or has expired. Request a new one.", "error"); return; }
 
   const button = event.currentTarget.querySelector("button");
   button.disabled = true;
@@ -156,12 +175,12 @@ $("#recovery-form").addEventListener("submit", async (event) => {
       throw new Error(body.msg || body.message || "Password update failed. Request a new recovery link.");
     }
     signOut();
-    message("Password updated. You can now sign in with your new password.");
-  } catch (error) { message(error.message); }
+    message("Password updated. You can now sign in with your new password.", "success");
+  } catch (error) { message(error.message, "error"); }
   finally { button.disabled = false; }
 });
 $("#cancel-recovery").addEventListener("click", () => { signOut(); message(""); });
-$("#sign-out").addEventListener("click", signOut);
+$("#sign-out").addEventListener("click", () => { signOut(); message(""); });
 $("#status-filter").addEventListener("change", () => { page = 0; load().catch((error) => message(error.message)); });
 $("#refresh").addEventListener("click", () => load().catch((error) => message(error.message)));
 $("#previous").addEventListener("click", () => { page--; load().catch((error) => message(error.message)); });
