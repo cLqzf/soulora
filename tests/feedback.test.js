@@ -36,10 +36,12 @@ test("stays unavailable without explicit collection switch", async () => {
 test("accepts valid submissions without exposing the service key to the client", async () => {
   const original = global.fetch;
   process.env.FEEDBACK_COLLECTION_ENABLED = "true";
-  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_URL = "https://example.supabase.co/rest/v1/";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "test-only-key";
   let stored;
-  global.fetch = async (_url, options) => {
+  let requestUrl;
+  global.fetch = async (url, options) => {
+    requestUrl = url;
     stored = JSON.parse(options.body);
     return { ok: true, status: 201 };
   };
@@ -50,6 +52,7 @@ test("accepts valid submissions without exposing the service key to the client",
     assert.equal(stored.email, "person@example.com");
     assert.equal(stored.research_opt_in, false);
     assert.equal(stored.submittedAt, undefined);
+    assert.equal(requestUrl, "https://example.supabase.co/rest/v1/feedback_submissions");
     const bad = response();
     await handler({ method: "POST", headers: { origin: "https://attacker.example", host: "soulora.ai", "content-type": "application/json" }, body: valid }, bad);
     assert.equal(bad.code, 403);

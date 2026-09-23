@@ -1,9 +1,13 @@
 const { validateFeedback } = require("../lib/feedback");
 
+function supabaseRestUrl(value) {
+  return value.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
-  const url = process.env.SUPABASE_URL;
+  const url = process.env.SUPABASE_URL ? supabaseRestUrl(process.env.SUPABASE_URL) : "";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const enabled = process.env.FEEDBACK_COLLECTION_ENABLED === "true";
   if (req.method === "GET") {
