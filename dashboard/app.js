@@ -122,11 +122,12 @@ function csvValue(value) {
 
 $("#login-form").addEventListener("submit", async (event) => {
   event.preventDefault(); message("");
-  const data = new FormData(event.currentTarget);
+  const form = event.currentTarget;
+  const data = new FormData(form);
   try {
     const response = await request("/auth/v1/token?grant_type=password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: data.get("email"), password: data.get("password") }) });
     token = (await response.json()).access_token;
-    event.currentTarget.reset();
+    form.reset();
     const admin = await request("/rest/v1/admin_users?select=user_id&limit=1");
     if (!(await admin.json()).length) { signOut(); throw new Error("This account is not an administrator."); }
     $("#login-panel").hidden = true; $("#console").hidden = false; $("#sign-out").hidden = false;
