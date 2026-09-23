@@ -1,86 +1,101 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Soulora · Research console</title>
+  <title>Soulora · 调研工作台</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
       <div class="brand-lockup">
-        <span class="brand-orbit" aria-hidden="true"><i></i></span>
-        <div><strong>SOULORA</strong><span>Research / private</span></div>
+        <span class="brand-mark" aria-hidden="true"><i></i><b></b></span>
+        <div><strong>SOULORA</strong><span>调研工作台</span></div>
       </div>
-      <button id="sign-out" class="button button-quiet" hidden>Sign out</button>
+      <div class="topbar-actions">
+        <span class="live-status"><i aria-hidden="true"></i>正在收集</span>
+        <span class="region-tag">SG · 新加坡</span>
+        <button id="sign-out" class="button button-quiet" hidden>退出登录</button>
+      </div>
     </header>
 
-    <section class="hero" aria-labelledby="page-title">
-      <div>
-        <span class="hero-kicker"><i aria-hidden="true"></i> Research operations</span>
-        <h1 id="page-title">Listen closely.<br /><span>Build with signal.</span></h1>
-        <p>Pre-launch feedback, organized for thoughtful decisions.</p>
+    <section id="login-panel" class="auth-stage">
+      <div class="auth-story">
+        <div class="story-copy">
+          <span class="section-label">PRE-LAUNCH RESEARCH</span>
+          <h1>听见真实声音，<br /><span>再决定下一步。</span></h1>
+          <p>把发布前的每一次反馈，整理成清晰、可跟进的产品信号。</p>
+        </div>
+        <div class="signal-visual" aria-hidden="true">
+          <span class="signal-core"></span>
+          <i class="orbit orbit-one"></i><i class="orbit orbit-two"></i><i class="orbit orbit-three"></i>
+          <b class="signal-dot dot-one"></b><b class="signal-dot dot-two"></b><b class="signal-dot dot-three"></b>
+        </div>
+        <div class="story-meta">
+          <div><span>数据区域</span><strong>新加坡</strong></div>
+          <div><span>访问权限</span><strong>仅管理员</strong></div>
+          <div><span>项目阶段</span><strong>发布前调研</strong></div>
+        </div>
       </div>
-      <div class="hero-context" aria-label="Workspace details">
-        <span>Private access</span><span>Singapore region</span><span>Live collection</span>
-      </div>
-    </section>
 
-    <section id="login-panel" class="auth-layout">
-      <div class="card login">
-        <span class="section-label">Secure access</span>
-        <h2>Administrator sign in</h2>
-        <p>Only accounts explicitly added to the admin list can view responses.</p>
+      <div class="auth-card">
+        <div class="auth-card-head">
+          <span class="auth-icon" aria-hidden="true">↗</span>
+          <div><span class="section-label">安全访问</span><h2>欢迎回来</h2></div>
+        </div>
+        <p>登录后查看、筛选并跟进用户反馈。</p>
         <form id="login-form">
-          <label>Email<input type="email" name="email" autocomplete="username" placeholder="admin@soulora.ai" required /></label>
-          <label>Password<input type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required /></label>
-          <button class="button button-primary" type="submit">Sign in <span aria-hidden="true">→</span></button>
+          <label>管理员邮箱<input type="email" name="email" autocomplete="username" placeholder="admin@soulora.ai" required /></label>
+          <label>密码<input type="password" name="password" autocomplete="current-password" placeholder="输入登录密码" required /></label>
+          <button class="button button-primary" type="submit"><span>进入工作台</span><i aria-hidden="true">→</i></button>
         </form>
-        <small class="security-note"><i aria-hidden="true"></i> Protected administrator workspace</small>
+        <div class="security-note"><span aria-hidden="true">✓</span><p><strong>受保护的管理空间</strong><small>只有已加入管理员名单的账号可以访问</small></p></div>
       </div>
-      <aside class="auth-aside" aria-label="Research handling principles">
-        <span class="section-label">Designed for care</span>
-        <h2>One quiet place for what people really mean.</h2>
-        <ul>
-          <li><span>01</span>Feedback remains separate from marketing consent.</li>
-          <li><span>02</span>Only explicitly listed administrators can read responses.</li>
-          <li><span>03</span>Exports contain personal data and should stay controlled.</li>
-        </ul>
-      </aside>
     </section>
 
-    <section id="recovery-panel" class="auth-layout recovery-layout" hidden>
-      <div class="card login">
-        <span class="section-label">Account recovery</span>
-        <h2>Set a new password</h2><p>Choose a new password for your administrator account.</p>
+    <section id="recovery-panel" class="recovery-stage" hidden>
+      <div class="auth-card recovery-card">
+        <div class="auth-card-head">
+          <span class="auth-icon" aria-hidden="true">✦</span>
+          <div><span class="section-label">账号恢复</span><h2>设置新密码</h2></div>
+        </div>
+        <p>新密码至少需要 8 个字符。</p>
         <form id="recovery-form">
-          <label>New password<input type="password" name="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required /></label>
-          <label>Confirm new password<input type="password" name="confirmation" autocomplete="new-password" minlength="8" placeholder="Repeat your password" required /></label>
-          <button class="button button-primary" type="submit">Update password <span aria-hidden="true">→</span></button>
+          <label>新密码<input type="password" name="password" autocomplete="new-password" minlength="8" placeholder="至少 8 个字符" required /></label>
+          <label>确认新密码<input type="password" name="confirmation" autocomplete="new-password" minlength="8" placeholder="再次输入新密码" required /></label>
+          <button class="button button-primary" type="submit"><span>更新密码</span><i aria-hidden="true">→</i></button>
         </form>
-        <button id="cancel-recovery" class="button button-text" type="button">← Back to sign in</button>
+        <button id="cancel-recovery" class="button button-text" type="button">← 返回登录</button>
       </div>
     </section>
 
     <section id="console" hidden>
+      <div class="dashboard-heading">
+        <div><span class="section-label">RESEARCH INBOX</span><h1>用户反馈</h1><p>查看调研信号，标记处理进度，并导出当前结果。</p></div>
+        <div class="dashboard-date"><span>工作台状态</span><strong><i aria-hidden="true"></i>实时同步</strong><small>数据安全存储于 Supabase</small></div>
+      </div>
+
       <div class="metrics" id="metrics"></div>
+
       <section class="workbench" aria-labelledby="responses-title">
         <div class="workbench-heading">
-          <div><span class="section-label">Inbox</span><h2 id="responses-title">Research responses</h2></div>
+          <div><span class="section-label">反馈列表</span><h2 id="responses-title">调研回复</h2></div>
           <div class="toolbar">
-            <label><span>Filter status</span><select id="status-filter"><option value="">All responses</option><option value="new">New</option><option value="reviewed">Reviewed</option><option value="contacted">Contacted</option></select></label>
-            <button id="refresh" class="button button-quiet" type="button">Refresh</button>
-            <button id="export" class="button button-primary" type="button">Export CSV</button>
+            <label><span>处理状态</span><select id="status-filter"><option value="">全部反馈</option><option value="new">新反馈</option><option value="reviewed">已查看</option><option value="contacted">已联系</option></select></label>
+            <button id="refresh" class="button button-quiet" type="button"><span aria-hidden="true">↻</span>刷新</button>
+            <button id="export" class="button button-primary" type="button">导出 CSV <span aria-hidden="true">↓</span></button>
           </div>
         </div>
-        <div class="response-columns" aria-hidden="true"><span>Participant</span><span>Signal</span><span>Review</span></div>
+        <div class="response-columns" aria-hidden="true"><span>参与者</span><span>反馈内容</span><span>处理进度</span></div>
         <div id="responses" class="responses"></div>
-        <div class="pagination"><button id="previous" class="button button-quiet" disabled>← Previous</button><span id="page-label"></span><button id="next" class="button button-quiet" disabled>Next →</button></div>
+        <div class="pagination"><button id="previous" class="button button-quiet" disabled>← 上一页</button><span id="page-label"></span><button id="next" class="button button-quiet" disabled>下一页 →</button></div>
       </section>
-      <p class="hint"><strong>Handle with care.</strong> Research opt-in permits interview invitations only. It does not grant marketing permission. Verify identity before handling an access or deletion request.</p>
+
+      <p class="hint"><span aria-hidden="true">i</span><span><strong>谨慎处理个人数据。</strong> 调研邀约授权仅用于邀请用户参与访谈，不代表用户同意接收营销信息。处理访问或删除请求前，请先核实身份。</span></p>
     </section>
+
     <p id="message" class="toast" role="status" aria-live="polite" hidden></p>
   </main>
   <script type="module" src="./app.js"></script>

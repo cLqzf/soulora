@@ -8,6 +8,15 @@ let page = 0;
 let rows = [];
 let total = 0;
 let messageTimer;
+const statusLabels = { new: "新反馈", reviewed: "已查看", contacted: "已联系" };
+const platformLabels = { iphone: "iPhone", android: "Android", web: "网页端", unsure: "尚未确定", desktop: "桌面端" };
+const momentLabels = {
+  "talk-through-a-hard-day": "困难一天后倾诉",
+  "reflect-and-journal": "反思与记录",
+  "calm-and-reset": "平静与重置",
+  "feel-less-alone": "减轻孤独感",
+  "remember-what-matters": "记住重要的事"
+};
 const message = (value, tone = "error") => {
   const element = $("#message");
   clearTimeout(messageTimer);
@@ -25,7 +34,7 @@ async function request(path, options = {}) {
   });
   if (!response.ok) {
     if (response.status === 401) signOut();
-    throw new Error(response.status === 401 ? "Session expired. Please sign in again." : `Request failed (${response.status}).`);
+    throw new Error(response.status === 401 ? "登录状态已失效，请重新登录。" : `请求失败（${response.status}）。`);
   }
   return response;
 }
@@ -63,11 +72,11 @@ function readAuthRedirect() {
     recoveryToken = accessToken;
     $("#login-panel").hidden = true;
     $("#recovery-panel").hidden = false;
-    message("Recovery link verified. Set your new password.", "info");
+    message("验证成功，请设置新密码。", "info");
     return true;
   }
 
-  if (error) message(`This recovery link could not be used: ${error}`);
+  if (error) message(`密码重置链接无法使用：${error}`);
   return false;
 }
 
@@ -84,52 +93,57 @@ async function load() {
 function render() {
   const metrics = $("#metrics");
   metrics.replaceChildren();
-  const metricValues = [["Matching responses", total], ["On this page", rows.length], ["Interview opt-ins", rows.filter((row) => row.research_opt_in).length], ["New on this page", rows.filter((row) => row.status === "new").length]];
-  for (const [index, [label, value]] of metricValues.entries()) {
+  const metricValues = [
+    ["当前结果", total, "符合筛选条件"],
+    ["本页反馈", rows.length, "当前已加载"],
+    ["愿意参与访谈", rows.filter((row) => row.research_opt_in).length, "可以发送访谈邀请"],
+    ["待处理", rows.filter((row) => row.status === "new").length, "本页尚未查看"]
+  ];
+  for (const [index, [label, value, detailText]] of metricValues.entries()) {
     const box = document.createElement("div"); box.className = `metric metric-${index + 1}`;
     const caption = document.createElement("span"); caption.className = "metric-label"; caption.textContent = label;
     const number = document.createElement("strong"); number.textContent = value;
-    const detail = document.createElement("small"); detail.textContent = index === 0 ? "Current filter" : index === 2 ? "Available to contact" : index === 3 ? "Needs attention" : "Loaded now";
+    const detail = document.createElement("small"); detail.textContent = detailText;
     box.append(caption, number, detail); metrics.append(box);
   }
   const container = $("#responses"); container.replaceChildren();
   if (!rows.length) {
     const empty = document.createElement("div"); empty.className = "empty-state";
     const mark = document.createElement("span"); mark.setAttribute("aria-hidden", "true"); mark.textContent = "◎";
-    const title = document.createElement("strong"); title.textContent = "No responses to show";
-    const copy = document.createElement("p"); copy.textContent = "Try another status filter or refresh the inbox.";
+    const title = document.createElement("strong"); title.textContent = "暂无符合条件的反馈";
+    const copy = document.createElement("p"); copy.textContent = "可以更换处理状态，或刷新后再查看。";
     empty.append(mark, title, copy); container.append(empty);
   }
   for (const row of rows) {
     const card = document.createElement("article"); card.className = "response";
     const identity = document.createElement("div"); identity.className = "response-identity";
     const email = document.createElement("strong"); email.className = "response-email"; email.textContent = row.email;
-    const date = document.createElement("time"); date.dateTime = row.created_at; date.textContent = new Date(row.created_at).toLocaleString();
+    const date = document.createElement("time"); date.dateTime = row.created_at; date.textContent = new Date(row.created_at).toLocaleString("zh-CN", { hour12: false });
     const context = document.createElement("div"); context.className = "response-meta";
-    const platform = document.createElement("span"); platform.className = "pill pill-neutral"; platform.textContent = row.platform;
-    const interview = document.createElement("span"); interview.className = `pill ${row.research_opt_in ? "pill-positive" : "pill-neutral"}`; interview.textContent = row.research_opt_in ? "Interview opt-in" : "No interview opt-in";
+    const platform = document.createElement("span"); platform.className = "pill pill-neutral"; platform.textContent = platformLabels[row.platform] || row.platform || "未填写平台";
+    const interview = document.createElement("span"); interview.className = `pill ${row.research_opt_in ? "pill-positive" : "pill-neutral"}`; interview.textContent = row.research_opt_in ? "愿意参与访谈" : "未授权访谈邀约";
     context.append(platform, interview); identity.append(email, date, context);
     const details = document.createElement("div"); details.className = "response-signal";
     const moments = document.createElement("div"); moments.className = "moment-list";
-    for (const moment of Array.isArray(row.moments) ? row.moments : []) { const tag = document.createElement("span"); tag.className = "moment-tag"; tag.textContent = String(moment).replace(/-/g, " "); moments.append(tag); }
-    const note = document.createElement("p"); note.className = "note"; note.textContent = row.feedback || "No written comment";
+    for (const moment of Array.isArray(row.moments) ? row.moments : []) { const tag = document.createElement("span"); tag.className = "moment-tag"; tag.textContent = momentLabels[moment] || String(moment).replace(/-/g, " "); moments.append(tag); }
+    const note = document.createElement("p"); note.className = "note"; note.textContent = row.feedback || "用户没有留下补充说明。";
     details.append(moments, note);
     const control = document.createElement("div"); control.className = "response-control";
-    const label = document.createElement("label"); label.innerHTML = "<span>Review status</span>";
+    const label = document.createElement("label"); label.innerHTML = "<span>处理状态</span>";
     const select = document.createElement("select"); select.className = `status-select status-${row.status}`;
-    for (const status of ["new", "reviewed", "contacted"]) { const option = document.createElement("option"); option.value = status; option.textContent = status; select.append(option); }
+    for (const status of ["new", "reviewed", "contacted"]) { const option = document.createElement("option"); option.value = status; option.textContent = statusLabels[status]; select.append(option); }
     select.value = row.status;
     select.addEventListener("change", async () => {
       select.disabled = true;
       try {
         await request(`/rest/v1/feedback_submissions?id=eq.${encodeURIComponent(row.id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: select.value }) });
-        row.status = select.value; select.className = `status-select status-${row.status}`; message("Review status saved.", "success");
+        row.status = select.value; select.className = `status-select status-${row.status}`; message("处理状态已保存。", "success");
       } catch (error) { select.value = row.status; message(error.message, "error"); }
       finally { select.disabled = false; }
     });
     label.append(select); control.append(label); card.append(identity, details, control); container.append(card);
   }
-  $("#page-label").textContent = `${total ? page * pageSize + 1 : 0}–${Math.min((page + 1) * pageSize, total)} of ${total}`;
+  $("#page-label").textContent = `${total ? page * pageSize + 1 : 0}–${Math.min((page + 1) * pageSize, total)} / 共 ${total} 条`;
   $("#previous").disabled = page === 0;
   $("#next").disabled = (page + 1) * pageSize >= total;
 }
@@ -143,26 +157,33 @@ $("#login-form").addEventListener("submit", async (event) => {
   event.preventDefault(); message("");
   const form = event.currentTarget;
   const data = new FormData(form);
+  const button = form.querySelector("button");
+  const buttonText = button.querySelector("span");
+  button.disabled = true;
+  buttonText.textContent = "正在登录…";
   try {
     const response = await request("/auth/v1/token?grant_type=password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: data.get("email"), password: data.get("password") }) });
     token = (await response.json()).access_token;
     form.reset();
     const admin = await request("/rest/v1/admin_users?select=user_id&limit=1");
-    if (!(await admin.json()).length) { signOut(); throw new Error("This account is not an administrator."); }
+    if (!(await admin.json()).length) { signOut(); throw new Error("该账号不在管理员名单中。"); }
     $("#login-panel").hidden = true; $("#console").hidden = false; $("#sign-out").hidden = false;
     await load();
   } catch (error) { message(error.message, "error"); }
+  finally { button.disabled = false; buttonText.textContent = "进入工作台"; }
 });
 $("#recovery-form").addEventListener("submit", async (event) => {
   event.preventDefault(); message("");
   const data = new FormData(event.currentTarget);
   const password = String(data.get("password") || "");
   const confirmation = String(data.get("confirmation") || "");
-  if (password !== confirmation) { message("Passwords do not match.", "error"); return; }
-  if (!recoveryToken) { message("This recovery link is missing or has expired. Request a new one.", "error"); return; }
+  if (password !== confirmation) { message("两次输入的密码不一致。", "error"); return; }
+  if (!recoveryToken) { message("密码重置链接缺失或已过期，请重新发送邮件。", "error"); return; }
 
   const button = event.currentTarget.querySelector("button");
+  const buttonText = button.querySelector("span");
   button.disabled = true;
+  buttonText.textContent = "正在更新…";
   try {
     const response = await fetch(`${base}/auth/v1/user`, {
       method: "PUT",
@@ -171,13 +192,12 @@ $("#recovery-form").addEventListener("submit", async (event) => {
       cache: "no-store"
     });
     if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw new Error(body.msg || body.message || "Password update failed. Request a new recovery link.");
+      throw new Error(response.status === 422 ? "新密码不符合要求，请至少输入 8 个字符。" : "密码更新失败，请重新发送重置邮件。");
     }
     signOut();
-    message("Password updated. You can now sign in with your new password.", "success");
+    message("密码已更新，请使用新密码登录。", "success");
   } catch (error) { message(error.message, "error"); }
-  finally { button.disabled = false; }
+  finally { button.disabled = false; buttonText.textContent = "更新密码"; }
 });
 $("#cancel-recovery").addEventListener("click", () => { signOut(); message(""); });
 $("#sign-out").addEventListener("click", () => { signOut(); message(""); });
@@ -197,7 +217,7 @@ try {
   let config;
   try {
     const response = await fetch("./api/config", { cache: "no-store" });
-    if (!response.ok) throw new Error("No deployed configuration");
+    if (!response.ok) throw new Error("未找到部署配置");
     config = await response.json();
   } catch {
     // A local static preview may use an uncommitted config.js instead.
@@ -208,5 +228,5 @@ try {
   readAuthRedirect();
 } catch {
   $("#login-form").querySelector("button").disabled = true;
-  message("Dashboard is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY in its deployment.");
+  message("工作台尚未完成配置，请在部署环境中设置 Supabase 连接信息。");
 }
